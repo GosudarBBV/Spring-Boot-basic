@@ -1,21 +1,18 @@
 package mate.academy.spring.boot.intro.repository;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import mate.academy.spring.boot.intro.exception.DataProcessingException;
 import mate.academy.spring.boot.intro.model.Book;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class BookRepositoryImpl implements BookRepository {
     private final SessionFactory sessionFactory;
-
-    @Autowired
-    public BookRepositoryImpl(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
 
     @Override
     public Book save(Book book) {
@@ -24,14 +21,14 @@ public class BookRepositoryImpl implements BookRepository {
         try {
             session = sessionFactory.openSession();
             transaction = session.beginTransaction();
-            session.save(book);
+            session.persist(book);
             transaction.commit();
             return book;
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
             }
-            throw new RuntimeException("Can't insert book into DB: " + book);
+            throw new DataProcessingException("Can't insert book into DB: " + book,e);
         } finally {
             if (session != null) {
                 session.close();
@@ -42,10 +39,10 @@ public class BookRepositoryImpl implements BookRepository {
     @Override
     public List<Book> findAll() {
         try (Session session = sessionFactory.openSession()) {
-            return session.createQuery("SELECT u FROM Book u",Book.class).getResultList();
+            return session.createQuery("FROM Book",Book.class).getResultList();
 
         } catch (Exception e) {
-            throw new RuntimeException("Can't get all books from FB", e);
+            throw new DataProcessingException("Can't get all books from FB",e);
         }
     }
 }

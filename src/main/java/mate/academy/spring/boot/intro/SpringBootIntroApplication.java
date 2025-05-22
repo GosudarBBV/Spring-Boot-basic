@@ -21,16 +21,16 @@ public class SpringBootIntroApplication {
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-            Book book1 = new Book();
-            book1.setAuthor("Kotlaras");
-            book1.setTitle("Morskit");
+            Book macbeth = new Book();
+            macbeth.setAuthor("William Shakespeare");
+            macbeth.setTitle("Macbeth");
 
-            Book book2 = new Book();
-            book2.setAuthor("Szelw");
-            book2.setTitle("AI");
+            Book othello = new Book();
+            othello.setAuthor("William Shakespeare");
+            othello.setTitle("Othello");
 
-            bookService.save(book1);
-            bookService.save(book2);
+            bookService.save(macbeth);
+            bookService.save(othello);
             System.out.println(bookService.findAll());
 
         };
