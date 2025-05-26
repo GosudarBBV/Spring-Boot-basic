@@ -7,11 +7,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.ToString;
 
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "books")
 public class Book {
@@ -25,7 +24,8 @@ public class Book {
     @Column(nullable = false, length = 255)
     private String author;
 
-    @Column(nullable = true, unique = true, length = 13)
+    @ToString.Include
+    @Column(name = "isbn",nullable = true, unique = true)
     private String isbn;
 
     @Column(nullable = true, precision = 10, scale = 2)

@@ -29,9 +29,9 @@ public class SpringBootIntroApplication {
             othello.setAuthor("William Shakespeare");
             othello.setTitle("Othello");
 
-            bookService.save(macbeth);
-            bookService.save(othello);
-            System.out.println(bookService.findAll());
+            //bookService.save(macbeth);
+            //bookService.save(othello);
+            //System.out.println(bookService.findAll());
 
         };
     }
