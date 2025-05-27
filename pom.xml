@@ -109,8 +109,10 @@
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
 					<linkXRef>false</linkXRef>
-					<includes>**/src/main/java/**/*.java</includes>
-					<excludes>**/target/generated-sources/**</excludes>
+					<violationSeverity>warning</violationSeverity>
+					<sourceDirectories>
+						<sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+					</sourceDirectories>
 				</configuration>
 			</plugin>
 
