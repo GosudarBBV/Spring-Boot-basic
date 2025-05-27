@@ -1,4 +1,4 @@
-package mate.academy.spring.boot.intro.exception;
+package book.shop.spring.boot.intro.exception;
 
 public class DataProcessingException extends RuntimeException {
     public DataProcessingException(String message) {

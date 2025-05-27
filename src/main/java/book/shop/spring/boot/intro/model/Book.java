@@ -1,4 +1,4 @@
-package mate.academy.spring.boot.intro.model;
+package book.shop.spring.boot.intro.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
 @Setter
+@Getter
 @Entity
 @Table(name = "books")
 public class Book {
@@ -25,7 +25,7 @@ public class Book {
     @Column(nullable = false, length = 255)
     private String author;
 
-    @Column(nullable = true, unique = true, length = 13)
+    @Column(nullable = true, unique = true)
     private String isbn;
 
     @Column(nullable = true, precision = 10, scale = 2)
