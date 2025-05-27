@@ -7,7 +7,6 @@ import book.shop.spring.boot.intro.mapper.BookMapper;
 import book.shop.spring.boot.intro.model.Book;
 import book.shop.spring.boot.intro.repository.BookRepository;
 import java.util.List;
-import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
