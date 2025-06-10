@@ -1,6 +1,6 @@
 package book.shop.spring.boot.intro.dto;
 
-import book.shop.spring.boot.intro.dto.field.FieldMatch;
+import book.shop.spring.boot.intro.validation.FieldMatch;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

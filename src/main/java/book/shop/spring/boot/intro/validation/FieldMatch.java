@@ -1,4 +1,4 @@
-package book.shop.spring.boot.intro.dto.field;
+package book.shop.spring.boot.intro.validation;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.TYPE;
