@@ -4,9 +4,14 @@ import book.shop.spring.boot.intro.dto.UserRegistrationRequestDto;
 import book.shop.spring.boot.intro.dto.UserResponseDto;
 import book.shop.spring.boot.intro.exception.RegistrationException;
 import book.shop.spring.boot.intro.mapper.UserMapper;
+import book.shop.spring.boot.intro.model.Role;
+import book.shop.spring.boot.intro.model.RoleName;
 import book.shop.spring.boot.intro.model.User;
+import book.shop.spring.boot.intro.repository.RoleRepository;
 import book.shop.spring.boot.intro.repository.UserRepository;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,6 +19,8 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto requestDto) {
@@ -22,9 +29,12 @@ public class UserServiceImpl implements UserService {
                     + requestDto.getEmail());
         }
 
-        User user = new User();
-        userMapper.toModel(user);
-        userRepository.save(user);
-        return userMapper.toResponseDto(user);
+        User user = userMapper.toModel(requestDto);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseThrow(() -> new RuntimeException("USER role not found"));
+        user.setRoles(Set.of(userRole));
+
+        return userMapper.toResponseDto(userRepository.save(user));
     }
 }

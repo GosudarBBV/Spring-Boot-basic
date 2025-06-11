@@ -12,6 +12,8 @@ public interface BookService {
 
     Page<BookDto> findAll(Pageable pageable);
 
+    Page<BookDto> findAll(String email, Pageable pageable);
+
     BookDto findById(Long id);
 
     void deleteById(Long id);
