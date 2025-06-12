@@ -10,12 +10,14 @@ import book.shop.spring.boot.intro.model.RoleName;
 import book.shop.spring.boot.intro.model.User;
 import book.shop.spring.boot.intro.repository.RoleRepository;
 import book.shop.spring.boot.intro.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
@@ -39,5 +41,10 @@ public class UserServiceImpl implements UserService {
         user.setRoles(Set.of(userRole));
 
         return userMapper.toResponseDto(userRepository.save(user));
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        userRepository.deleteById(id);
     }
 }
