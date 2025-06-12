@@ -2,6 +2,7 @@ package book.shop.spring.boot.intro.service;
 
 import book.shop.spring.boot.intro.dto.UserRegistrationRequestDto;
 import book.shop.spring.boot.intro.dto.UserResponseDto;
+import book.shop.spring.boot.intro.exception.EntityNotFoundException;
 import book.shop.spring.boot.intro.exception.RegistrationException;
 import book.shop.spring.boot.intro.mapper.UserMapper;
 import book.shop.spring.boot.intro.model.Role;
@@ -32,7 +33,9 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toModel(requestDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Role userRole = roleRepository.findByName(RoleName.USER)
-                .orElseThrow(() -> new RuntimeException("USER role not found"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Role with name " + RoleName.USER + " not found"));
+
         user.setRoles(Set.of(userRole));
 
         return userMapper.toResponseDto(userRepository.save(user));
