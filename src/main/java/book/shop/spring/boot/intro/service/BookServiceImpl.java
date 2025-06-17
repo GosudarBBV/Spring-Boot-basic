@@ -1,6 +1,7 @@
 package book.shop.spring.boot.intro.service;
 
 import book.shop.spring.boot.intro.dto.BookDto;
+import book.shop.spring.boot.intro.dto.BookDtoWithoutCategoryIds;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
 import book.shop.spring.boot.intro.exception.EntityNotFoundException;
@@ -8,6 +9,7 @@ import book.shop.spring.boot.intro.mapper.BookMapper;
 import book.shop.spring.boot.intro.model.Book;
 import book.shop.spring.boot.intro.repository.BookRepository;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,5 +54,13 @@ public class BookServiceImpl implements BookService {
         bookMapper.updateBookFromDto(dto, book);
 
         return bookMapper.toDto(repository.save(book));
+    }
+
+    @Override
+    public List<BookDtoWithoutCategoryIds> findAllByCategoryId(Long categoryId) {
+        return repository.findAllByCategories_Id(categoryId)
+                .stream()
+                .map(bookMapper::toDtoWithoutCategories)
+                .toList();
     }
 }
