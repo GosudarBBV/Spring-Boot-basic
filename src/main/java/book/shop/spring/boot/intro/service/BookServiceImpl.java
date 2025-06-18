@@ -7,8 +7,11 @@ import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
 import book.shop.spring.boot.intro.exception.EntityNotFoundException;
 import book.shop.spring.boot.intro.mapper.BookMapper;
 import book.shop.spring.boot.intro.model.Book;
+import book.shop.spring.boot.intro.model.Category;
 import book.shop.spring.boot.intro.repository.BookRepository;
+import book.shop.spring.boot.intro.repository.CategoryRepository;
 import jakarta.transaction.Transactional;
+import java.util.HashSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,11 +24,19 @@ import org.springframework.stereotype.Service;
 public class BookServiceImpl implements BookService {
     private final BookRepository repository;
     private final BookMapper bookMapper;
+    private final CategoryRepository categoryRepository;
 
     @Override
-    public BookDto save(CreateBookRequestDto requestDto) {
-        Book book = bookMapper.toModel(requestDto);
-        return bookMapper.toDto(repository.save(book));
+    public BookDto save(CreateBookRequestDto dto) {
+        Book book = bookMapper.toModel(dto);
+
+        if (dto.categoryIds() != null && !dto.categoryIds().isEmpty()) {
+            List<Category> categories = categoryRepository.findAllById(dto.categoryIds());
+            book.setCategories(new HashSet<>(categories));
+        }
+
+        Book saved = repository.save(book);
+        return bookMapper.toDto(saved);
     }
 
     @Override
@@ -57,10 +68,8 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<BookDtoWithoutCategoryIds> findAllByCategoryId(Long categoryId) {
-        return repository.findAllByCategories_Id(categoryId)
-                .stream()
-                .map(bookMapper::toDtoWithoutCategories)
-                .toList();
+    public Page<BookDtoWithoutCategoryIds> findAllByCategoryId(Long id, Pageable pageable) {
+        Page<Book> booksPage = repository.findAllByCategoriesId(id, pageable);
+        return booksPage.map(bookMapper::toDtoWithoutCategories);
     }
 }

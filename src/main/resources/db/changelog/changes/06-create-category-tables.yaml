@@ -32,7 +32,7 @@ databaseChangeLog:
 
   - changeSet:
       id: book-category-join-table
-      author: someonewithpath
+      author: Bohdan Buhrak
       runOnChange: true
       preConditions:
         - onFail: MARK_RAN

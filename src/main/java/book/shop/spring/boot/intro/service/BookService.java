@@ -4,7 +4,6 @@ import book.shop.spring.boot.intro.dto.BookDto;
 import book.shop.spring.boot.intro.dto.BookDtoWithoutCategoryIds;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -20,5 +19,5 @@ public interface BookService {
 
     BookDto update(Long id, UpdateBookRequestDto requestDto);
 
-    List<BookDtoWithoutCategoryIds> findAllByCategoryId(Long id);
+    Page<BookDtoWithoutCategoryIds> findAllByCategoryId(Long id, Pageable pageable);
 }

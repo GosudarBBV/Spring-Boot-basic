@@ -1,7 +1,8 @@
 package book.shop.spring.boot.intro.controller;
 
 import book.shop.spring.boot.intro.dto.BookDtoWithoutCategoryIds;
-import book.shop.spring.boot.intro.dto.CategoryDto;
+import book.shop.spring.boot.intro.dto.CategoryResponseDto;
+import book.shop.spring.boot.intro.dto.CreateCategoryRequestDto;
 import book.shop.spring.boot.intro.service.BookService;
 import book.shop.spring.boot.intro.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,10 +25,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/categories")
 @RequiredArgsConstructor
 @Tag(name = "Categories", description = "Operations related to book categories")
 public class CategoryController {
@@ -32,19 +38,20 @@ public class CategoryController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new category", description = "Available only for ADMIN role")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Category created successfully"),
+            @ApiResponse(responseCode = "201", description = "Category created successfully"),
             @ApiResponse(responseCode = "400", description = "Validation failed")
     })
-    public CategoryDto create(@RequestBody @Valid CategoryDto dto) {
+    public CategoryResponseDto create(@RequestBody @Valid CreateCategoryRequestDto dto) {
         return service.save(dto);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping
     @Operation(summary = "Get all categories", description = "Available for ADMIN and USER roles")
-    public List<CategoryDto> getAll() {
+    public List<CategoryResponseDto> getAll() {
         return service.findAll();
     }
 
@@ -55,7 +62,7 @@ public class CategoryController {
             @ApiResponse(responseCode = "200", description = "Category found"),
             @ApiResponse(responseCode = "404", description = "Category not found")
     })
-    public CategoryDto getById(
+    public CategoryResponseDto getById(
             @Parameter(description = "Category ID to retrieve") @PathVariable Long id) {
         return service.getById(id);
     }
@@ -67,18 +74,21 @@ public class CategoryController {
             @ApiResponse(responseCode = "200", description = "Category updated successfully"),
             @ApiResponse(responseCode = "404", description = "Category not found")
     })
-    public CategoryDto update(
+    public CategoryResponseDto update(
             @Parameter(description = "ID of the category to update") @PathVariable Long id,
-            @RequestBody @Valid CategoryDto dto) {
+            @RequestBody @Valid CreateCategoryRequestDto dto) {
         return service.update(id, dto);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a category", description = "Available only for ADMIN role")
+    @Operation(summary = "Delete a category",
+            description = "Available only for ADMIN role")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Category deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Category not found")
+            @ApiResponse(responseCode = "200",
+                    description = "Category deleted successfully"),
+            @ApiResponse(responseCode = "404",
+                    description = "Category not found")
     })
     public void delete(
             @Parameter(description = "ID of the category to delete")
@@ -86,18 +96,18 @@ public class CategoryController {
         service.deleteById(id);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @GetMapping("/{id}/books")
+    @GetMapping("/by-category/{id}")
     @Operation(summary = "Get books by category",
-            description = "Returns all books belonging to a specific category")
+            description = "Returns paginated books by category ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",
-                    description = "Books returned successfully"),
-            @ApiResponse(responseCode = "404",
-                    description = "Category not found")
+                    description = "Books retrieved successfully"),
+            @ApiResponse(responseCode = "400",
+                    description = "Invalid category ID")
     })
-    public List<BookDtoWithoutCategoryIds> getBooksByCategoryId(
-            @Parameter(description = "ID of the category") @PathVariable Long id) {
-        return bookService.findAllByCategoryId(id);
+    public Page<BookDtoWithoutCategoryIds> getBooksByCategoryId(
+            @Parameter(description = "ID of the category") @PathVariable Long id,
+            @ParameterObject Pageable pageable) {
+        return bookService.findAllByCategoryId(id, pageable);
     }
 }

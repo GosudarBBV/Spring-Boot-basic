@@ -1,6 +1,7 @@
 package book.shop.spring.boot.intro.service;
 
-import book.shop.spring.boot.intro.dto.CategoryDto;
+import book.shop.spring.boot.intro.dto.CategoryResponseDto;
+import book.shop.spring.boot.intro.dto.CreateCategoryRequestDto;
 import book.shop.spring.boot.intro.exception.EntityNotFoundException;
 import book.shop.spring.boot.intro.mapper.CategoryMapper;
 import book.shop.spring.boot.intro.model.Category;
@@ -15,32 +16,40 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository repository;
     private final CategoryMapper mapper;
 
-    public List<CategoryDto> findAll() {
+    @Override
+    public List<CategoryResponseDto> findAll() {
         return repository.findAll()
                 .stream()
-                .map(mapper::toDto)
+                .map(mapper::toResponseDto)
                 .toList();
     }
 
-    public CategoryDto getById(Long id) {
+    @Override
+    public CategoryResponseDto getById(Long id) {
         Category category = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
-        return mapper.toDto(category);
+        return mapper.toResponseDto(category);
     }
 
-    public CategoryDto save(CategoryDto dto) {
-        return mapper.toDto(repository.save(mapper.toEntity(dto)));
+    @Override
+    public CategoryResponseDto save(CreateCategoryRequestDto dto) {
+        Category category = mapper.toEntity(dto);
+        return mapper.toResponseDto(repository.save(category));
     }
 
-    public CategoryDto update(Long id, CategoryDto dto) {
+    @Override
+    public CategoryResponseDto update(Long id, CreateCategoryRequestDto dto) {
         Category category = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
-        category.setName(dto.name());
-        category.setDescription(dto.description());
-        return mapper.toDto(repository.save(category));
+                .orElseThrow(
+                        () -> new EntityNotFoundException("Category not found with id: " + id));
+        return mapper.toResponseDto(repository.save(category));
     }
 
+    @Override
     public void deleteById(Long id) {
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("Category not found with id: " + id);
+        }
         repository.deleteById(id);
     }
 }
