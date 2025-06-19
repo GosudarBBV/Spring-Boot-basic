@@ -35,8 +35,7 @@ public class BookServiceImpl implements BookService {
             book.setCategories(new HashSet<>(categories));
         }
 
-        Book saved = repository.save(book);
-        return bookMapper.toDto(saved);
+        return bookMapper.toDto(repository.save(book));
     }
 
     @Override

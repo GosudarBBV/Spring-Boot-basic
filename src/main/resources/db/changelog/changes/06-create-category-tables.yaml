@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: add-categories-table
-      author: someonewithpath
+      author: Bohdan Buhrak
       preConditions:
         - onFail: MARK_RAN
           not:
@@ -38,10 +38,10 @@ databaseChangeLog:
         - onFail: MARK_RAN
           not:
             tableExists:
-              tableName: book_category
+              tableName: books_categories
       changes:
         - createTable:
-            tableName: book_category
+            tableName: books_categories
             columns:
               - column:
                   name: book_id
