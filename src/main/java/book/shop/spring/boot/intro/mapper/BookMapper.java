@@ -2,6 +2,7 @@ package book.shop.spring.boot.intro.mapper;
 
 import book.shop.spring.boot.intro.config.MapperConfig;
 import book.shop.spring.boot.intro.dto.BookDto;
+import book.shop.spring.boot.intro.dto.BookDtoWithoutCategoryIds;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
 import book.shop.spring.boot.intro.model.Book;
@@ -15,4 +16,6 @@ public interface BookMapper {
     Book toModel(CreateBookRequestDto bookDto);
 
     void updateBookFromDto(UpdateBookRequestDto dto, @MappingTarget Book book);
+
+    BookDtoWithoutCategoryIds toDtoWithoutCategories(Book book);
 }

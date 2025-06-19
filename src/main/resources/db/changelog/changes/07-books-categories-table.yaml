@@ -1,21 +1,24 @@
 databaseChangeLog:
   - changeSet:
-      id: create-roles-table
+      id: book-category-join-table
       author: Bohdan Buhrak
+      runOnChange: true
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: books_categories
       changes:
         - createTable:
-            tableName: roles
+            tableName: books_categories
             columns:
               - column:
-                  name: id
+                  name: book_id
                   type: BIGINT
-                  autoIncrement: true
                   constraints:
-                    primaryKey: true
                     nullable: false
               - column:
-                  name: name
-                  type: VARCHAR(255)
+                  name: category_id
+                  type: BIGINT
                   constraints:
                     nullable: false
-                    unique: true

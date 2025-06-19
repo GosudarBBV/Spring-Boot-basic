@@ -5,18 +5,30 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 
 @Setter
 @Getter
 @Entity
 @SQLDelete(sql = "UPDATE books SET deleted = true WHERE id=?")
-@Where(clause = "deleted = false")
+@FilterDef(name = "deletedBookFilter", parameters = @ParamDef(name = "isDeleted",
+        type = Boolean.class))
+@Filter(name = "deletedBookFilter",
+        condition = "deleted = :isDeleted")
 @Table(name = "books")
 public class Book {
     @Id
@@ -40,6 +52,16 @@ public class Book {
 
     @Column(length = 255)
     private String coverImage;
+
+    @ManyToMany
+    @JoinTable(
+            name = "books_categories",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<Category> categories = new HashSet<>();
 
     @Column(nullable = false)
     private Boolean deleted;
