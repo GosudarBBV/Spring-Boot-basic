@@ -15,7 +15,6 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -54,8 +53,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication.getPrincipal() == null) {
+            throw new EntityNotFoundException("User is not authenticated");
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof User) {
+            Long userId = ((User) principal).getId();
+            return userRepository.findById(userId)
+                    .orElseThrow(()
+                            -> new EntityNotFoundException("User not found by id: "
+                            + userId));
+        } else {
+            throw new EntityNotFoundException("Authentication principal is not of User type");
+        }
     }
 }

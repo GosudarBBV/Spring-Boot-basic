@@ -2,13 +2,16 @@ package book.shop.spring.boot.intro.service;
 
 import book.shop.spring.boot.intro.dto.ShoppingCartResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateCartItemRequestDto;
+import book.shop.spring.boot.intro.model.User;
 
 public interface ShoppingCartService {
-    void updateCartItemQuantity(Long cartItemId, int quantity);
+    ShoppingCartResponseDto createCart(String email);
 
-    ShoppingCartResponseDto getCurrentUserCart();
+    public ShoppingCartResponseDto getCartByUser(User user);
 
-    ShoppingCartResponseDto updateCartItem(Long cartItemId, UpdateCartItemRequestDto dto);
+    public ShoppingCartResponseDto updateCartItem(Long cartItemId,
+                                                  UpdateCartItemRequestDto dto,
+                                                  User user);
 
-    void removeCartItem(Long cartItemId);
+    void removeCartItem(Long cartItemId, User user);
 }
