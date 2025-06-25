@@ -2,7 +2,6 @@ package book.shop.spring.boot.intro.controller;
 
 import book.shop.spring.boot.intro.dto.ShoppingCartResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateCartItemRequestDto;
-import book.shop.spring.boot.intro.model.User;
 import book.shop.spring.boot.intro.service.ShoppingCartService;
 import book.shop.spring.boot.intro.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,16 +34,16 @@ public class ShoppingCartController {
     @Operation(summary = "Create shopping cart for the user")
     @ApiResponse(responseCode = "201", description = "Shopping cart created")
     public ResponseEntity<ShoppingCartResponseDto> createShoppingCart() {
-        User user = userService.getAuthenticatedUser();
-        ShoppingCartResponseDto createdCart = shoppingCartService.createCart(user.getEmail());
+        Long userId = userService.getAuthenticatedUserId();
+        ShoppingCartResponseDto createdCart = shoppingCartService.createCart(userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCart);
     }
 
     @GetMapping
     @Operation(summary = "Get current user's shopping cart")
     public ShoppingCartResponseDto getShoppingCart() {
-        User user = userService.getAuthenticatedUser();
-        return shoppingCartService.getCartByUser(user);
+        Long userId = userService.getAuthenticatedUserId();
+        return shoppingCartService.getCartByUser(userId);
     }
 
     @PutMapping("/items/{cartItemId}")
@@ -52,8 +51,8 @@ public class ShoppingCartController {
     public ShoppingCartResponseDto updateCartItem(
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId,
             @RequestBody @Valid UpdateCartItemRequestDto dto) {
-        User user = userService.getAuthenticatedUser();
-        return shoppingCartService.updateCartItem(cartItemId, dto, user);
+        Long userId = userService.getAuthenticatedUserId();
+        return shoppingCartService.updateCartItem(cartItemId, dto, userId);
     }
 
     @DeleteMapping("/items/{cartItemId}")
@@ -61,7 +60,7 @@ public class ShoppingCartController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeCartItem(
             @Parameter(description = "Cart item ID") @PathVariable Long cartItemId) {
-        User user = userService.getAuthenticatedUser();
-        shoppingCartService.removeCartItem(cartItemId, user);
+        Long userId = userService.getAuthenticatedUserId();
+        shoppingCartService.removeCartItem(cartItemId, userId);
     }
 }

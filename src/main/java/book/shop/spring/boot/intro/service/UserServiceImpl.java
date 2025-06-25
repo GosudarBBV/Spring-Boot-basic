@@ -51,25 +51,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getAuthenticatedUser() {
+    public Long getAuthenticatedUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || authentication.getPrincipal() == null) {
-            throw new EntityNotFoundException("User is not authenticated");
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof User) {
-            Long userId = ((User) principal).getId();
-            return userRepository.findById(userId)
-                    .orElseThrow(()
-                            -> new EntityNotFoundException("User not found by id: "
-                            + userId));
-        } else {
-            throw new EntityNotFoundException("Authentication principal is not of User type");
-        }
+        User user = (User) authentication.getPrincipal();
+        return user.getId();
     }
 }
