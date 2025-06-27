@@ -1,5 +1,6 @@
 package book.shop.spring.boot.intro.controller;
 
+import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
 import book.shop.spring.boot.intro.dto.ShoppingCartResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateCartItemRequestDto;
 import book.shop.spring.boot.intro.service.ShoppingCartService;
@@ -10,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,12 +31,11 @@ public class ShoppingCartController {
     private final UserService userService;
 
     @PostMapping
-    @Operation(summary = "Create shopping cart for the user")
-    @ApiResponse(responseCode = "201", description = "Shopping cart created")
-    public ResponseEntity<ShoppingCartResponseDto> createShoppingCart() {
+    @Operation(summary = "Add book to the shopping cart")
+    @ApiResponse(responseCode = "200", description = "Book added to shopping cart")
+    public ShoppingCartResponseDto addBookToCart(@RequestBody @Valid AddCartItemRequestDto dto) {
         Long userId = userService.getAuthenticatedUserId();
-        ShoppingCartResponseDto createdCart = shoppingCartService.createCart(userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCart);
+        return shoppingCartService.addBookToCart(dto.bookId(), dto.quantity(), userId);
     }
 
     @GetMapping

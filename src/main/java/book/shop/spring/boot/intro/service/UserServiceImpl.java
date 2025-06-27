@@ -7,8 +7,10 @@ import book.shop.spring.boot.intro.exception.RegistrationException;
 import book.shop.spring.boot.intro.mapper.UserMapper;
 import book.shop.spring.boot.intro.model.Role;
 import book.shop.spring.boot.intro.model.RoleName;
+import book.shop.spring.boot.intro.model.ShoppingCart;
 import book.shop.spring.boot.intro.model.User;
 import book.shop.spring.boot.intro.repository.RoleRepository;
+import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
 import book.shop.spring.boot.intro.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.Set;
@@ -26,6 +28,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final ShoppingCartRepository shoppingCartRepository;
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto requestDto) {
@@ -41,6 +44,7 @@ public class UserServiceImpl implements UserService {
                         "Role with name " + RoleName.USER + " not found"));
 
         user.setRoles(Set.of(userRole));
+        createShoppingCart(user);
 
         return userMapper.toResponseDto(userRepository.save(user));
     }
@@ -55,5 +59,17 @@ public class UserServiceImpl implements UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) authentication.getPrincipal();
         return user.getId();
+    }
+
+    @Override
+    public void createShoppingCart(User user) {
+        if (shoppingCartRepository.existsByUserId(user.getId())) {
+            throw new IllegalStateException("Shopping cart already exists for userId: "
+                    + user.getId());
+        }
+
+        ShoppingCart shoppingCart = new ShoppingCart();
+        shoppingCart.setUser(user);
+        shoppingCartRepository.save(shoppingCart);
     }
 }

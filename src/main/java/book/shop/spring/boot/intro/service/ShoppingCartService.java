@@ -4,7 +4,7 @@ import book.shop.spring.boot.intro.dto.ShoppingCartResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateCartItemRequestDto;
 
 public interface ShoppingCartService {
-    ShoppingCartResponseDto createCart(Long userId);
+    ShoppingCartResponseDto addBookToCart(Long bookId, int quantity, Long userId);
 
     ShoppingCartResponseDto getCartByUser(Long userId);
 
