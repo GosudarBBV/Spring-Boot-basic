@@ -3,6 +3,7 @@ package book.shop.spring.boot.intro.service;
 import book.shop.spring.boot.intro.dto.OrderItemDto;
 import book.shop.spring.boot.intro.dto.OrderResponseDto;
 import book.shop.spring.boot.intro.exception.EntityNotFoundException;
+import book.shop.spring.boot.intro.exception.OrderProcessingException;
 import book.shop.spring.boot.intro.mapper.OrderMapper;
 import book.shop.spring.boot.intro.model.CartItem;
 import book.shop.spring.boot.intro.model.Order;
@@ -36,43 +37,19 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponseDto placeOrder(Long userId, String shippingAddress) {
-        ShoppingCart cart = shoppingCartRepository.findByUserId(userId)
-                .orElseThrow(()
-                        -> new EntityNotFoundException("Shopping cart not found for userId: "
-                        + userId));
+        ShoppingCart cart = getShoppingCart(userId);
+        validateCartNotEmpty(cart);
 
-        Set<CartItem> cartItems = cart.getCartItems();
-        if (cartItems.isEmpty()) {
-            throw new IllegalStateException("Shopping cart is empty");
-        }
-
-        Order order = new Order();
-        order.setUser(cart.getUser());
-        order.setOrderDate(LocalDateTime.now());
-        order.setStatus(OrderStatus.PENDING);
-        order.setShippingAddress(shippingAddress);
-
-        BigDecimal total = BigDecimal.ZERO;
-        Set<OrderItem> orderItems = new HashSet<>();
-
-        for (CartItem cartItem : cartItems) {
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setBook(cartItem.getBook());
-            orderItem.setQuantity(cartItem.getQuantity());
-            BigDecimal price = cartItem.getBook().getPrice()
-                    .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-            orderItem.setPrice(price);
-            orderItems.add(orderItem);
-            total = total.add(price);
-        }
+        Order order = prepareOrder(cart, shippingAddress);
+        Set<OrderItem> orderItems = mapCartItemsToOrderItems(cart.getCartItems(), order);
+        BigDecimal total = calculateTotal(orderItems);
 
         order.setTotal(total);
         order.setOrderItems(orderItems);
 
         orderRepository.save(order);
         orderItemRepository.saveAll(orderItems);
-        cartItemRepository.deleteAll(cartItems);
+        cartItemRepository.deleteAll(cart.getCartItems());
 
         return orderMapper.toDto(order);
     }
@@ -114,5 +91,48 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("Order not found: id = " + orderId));
         order.setStatus(status);
         return orderMapper.toDto(order);
+    }
+
+    private ShoppingCart getShoppingCart(Long userId) {
+        return shoppingCartRepository.findByUserId(userId)
+                .orElseThrow(()
+                        -> new EntityNotFoundException("Shopping cart not found for userId: "
+                        + userId));
+    }
+
+    private void validateCartNotEmpty(ShoppingCart cart) {
+        if (cart.getCartItems().isEmpty()) {
+            throw new OrderProcessingException("Shopping cart is empty");
+        }
+    }
+
+    private Order prepareOrder(ShoppingCart cart, String shippingAddress) {
+        Order order = new Order();
+        order.setUser(cart.getUser());
+        order.setOrderDate(LocalDateTime.now());
+        order.setStatus(OrderStatus.PENDING);
+        order.setShippingAddress(shippingAddress);
+        return order;
+    }
+
+    private Set<OrderItem> mapCartItemsToOrderItems(Set<CartItem> cartItems, Order order) {
+        Set<OrderItem> orderItems = new HashSet<>();
+        for (CartItem cartItem : cartItems) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setBook(cartItem.getBook());
+            orderItem.setQuantity(cartItem.getQuantity());
+            BigDecimal price = cartItem.getBook().getPrice()
+                    .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+            orderItem.setPrice(price);
+            orderItems.add(orderItem);
+        }
+        return orderItems;
+    }
+
+    private BigDecimal calculateTotal(Set<OrderItem> orderItems) {
+        return orderItems.stream()
+                .map(OrderItem::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
