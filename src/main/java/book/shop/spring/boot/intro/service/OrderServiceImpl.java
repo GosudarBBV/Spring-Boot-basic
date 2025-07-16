@@ -10,7 +10,6 @@ import book.shop.spring.boot.intro.model.Order;
 import book.shop.spring.boot.intro.model.OrderItem;
 import book.shop.spring.boot.intro.model.OrderStatus;
 import book.shop.spring.boot.intro.model.ShoppingCart;
-import book.shop.spring.boot.intro.repository.CartItemRepository;
 import book.shop.spring.boot.intro.repository.OrderItemRepository;
 import book.shop.spring.boot.intro.repository.OrderRepository;
 import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
@@ -30,7 +29,6 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class OrderServiceImpl implements OrderService {
     private final ShoppingCartRepository shoppingCartRepository;
-    private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderMapper orderMapper;
@@ -45,11 +43,10 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal total = calculateTotal(orderItems);
 
         order.setTotal(total);
-        order.setOrderItems(orderItems);
 
         orderRepository.save(order);
-        orderItemRepository.saveAll(orderItems);
-        cartItemRepository.deleteAll(cart.getCartItems());
+        cart.clearCart();
+        shoppingCartRepository.save(cart);
 
         return orderMapper.toDto(order);
     }
@@ -75,13 +72,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderItemDto getOrderItem(Long orderId, Long itemId, Long userId) {
-        orderRepository.findByIdAndUserId(orderId, userId)
-                .orElseThrow(()
-                        -> new EntityNotFoundException("Order not found or does "
-                        + "not belong to user"));
-
-        OrderItem item = orderItemRepository.findByIdAndOrderId(itemId, orderId)
-                .orElseThrow(() -> new EntityNotFoundException("Order item not found"));
+        OrderItem item = orderItemRepository
+                .findByIdAndOrderIdAndOrderUserId(itemId, orderId, userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Order item not found: itemId = " + itemId
+                                + ", orderId = " + orderId
+                                + ", userId = " + userId));
         return orderMapper.toOrderItemDto(item);
     }
 
@@ -102,7 +98,8 @@ public class OrderServiceImpl implements OrderService {
 
     private void validateCartNotEmpty(ShoppingCart cart) {
         if (cart.getCartItems().isEmpty()) {
-            throw new OrderProcessingException("Shopping cart is empty");
+            throw new OrderProcessingException("Shopping cart is empty for userId = "
+                    + cart.getUser().getId());
         }
     }
 
