@@ -14,7 +14,7 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: table
+                  name: title
                   type: varchar(255)
               - column:
                   name: author
