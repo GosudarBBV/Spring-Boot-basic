@@ -14,15 +14,20 @@ import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE users SET deleted = true WHERE id=?")
-@Where(clause = "deleted = false")
+@FilterDef(name = "deletedUserFilter", parameters = @ParamDef(name = "isDeleted",
+        type = Boolean.class))
+@Filter(name = "deletedUserFilter",
+        condition = "deleted = :isDeleted")
 @Getter
 @Setter
 public class User implements UserDetails {
@@ -44,8 +49,8 @@ public class User implements UserDetails {
 
     private String shippingAddress;
 
-    @Column(nullable = false)
-    private boolean isDeleted;
+    @Column(columnDefinition = "TINYINT(1)", nullable = false)
+    private boolean isDeleted = false;
 
     @ManyToMany
     @JoinTable(

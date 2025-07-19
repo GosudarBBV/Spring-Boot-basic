@@ -63,6 +63,6 @@ public class Book {
     @EqualsAndHashCode.Exclude
     private Set<Category> categories = new HashSet<>();
 
-    @Column(nullable = false)
-    private Boolean deleted;
+    @Column(columnDefinition = "TINYINT(1)", nullable = false)
+    private boolean isDeleted = false;
 }
