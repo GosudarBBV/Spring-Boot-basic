@@ -27,7 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @FilterDef(name = "deletedUserFilter", parameters = @ParamDef(name = "isDeleted",
         type = Boolean.class))
 @Filter(name = "deletedUserFilter",
-        condition = "deleted = :isDeleted")
+        condition = "is_deleted = :isDeleted")
 @Getter
 @Setter
 public class User implements UserDetails {

@@ -23,7 +23,7 @@ import org.hibernate.annotations.SQLDelete;
 @FilterDef(name = "deletedOrderItemsFilter", parameters = @ParamDef(name = "isDeleted",
         type = Boolean.class))
 @Filter(name = "deletedOrderItemsFilter",
-        condition = "deleted = :isDeleted")
+        condition = "is_deleted = :isDeleted")
 @Getter
 @Setter
 public class OrderItem {

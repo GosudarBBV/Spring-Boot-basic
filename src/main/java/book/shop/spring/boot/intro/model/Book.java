@@ -28,7 +28,7 @@ import org.hibernate.annotations.SQLDelete;
 @FilterDef(name = "deletedBookFilter", parameters = @ParamDef(name = "isDeleted",
         type = Boolean.class))
 @Filter(name = "deletedBookFilter",
-        condition = "deleted = :isDeleted")
+        condition = "is_deleted = :isDeleted")
 @Table(name = "books")
 public class Book {
     @Id
