@@ -26,11 +26,17 @@ public class OrderItemRepositoryTest {
 
     @Container
     @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
-
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+            .withDatabaseName("test_db")
+            .withUsername("test")
+            .withPassword("test")
+            .withInitScript("init.sql");;
 
     @Autowired
     private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private BookRepository bookRepository;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -55,11 +61,18 @@ public class OrderItemRepositoryTest {
         orderRepository.save(order);
 
         // Create order item
-        OrderItem item = new OrderItem();
         Book book = new Book();
         book.setTitle("Book 1");
+        book.setAuthor("Author");
         book.setPrice(BigDecimal.valueOf(50));
-        item.setBook(book);
+        book.setIsbn("1234567890123");
+        book.setDescription("Test description");
+        book.setCoverImage("cover.jpg");
+        book.setDeleted(false);
+        bookRepository.save(book); // ✅ save book before using
+
+        OrderItem item = new OrderItem();
+        item.setBook(book); // ✅ already saved
         item.setOrder(order);
         item.setQuantity(2);
         item.setPrice(BigDecimal.valueOf(100));

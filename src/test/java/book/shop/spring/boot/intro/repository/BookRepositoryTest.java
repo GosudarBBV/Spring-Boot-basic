@@ -29,7 +29,11 @@ class BookRepositoryTest {
 
     @Container
     @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+            .withDatabaseName("book_shop_test")
+            .withUsername("user")
+            .withPassword("password")
+            .withInitScript("init.sql");;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -64,7 +68,6 @@ class BookRepositoryTest {
         bookRepository.save(book);
 
         Page<Book> page = bookRepository.findAllByCategoriesId(category.getId(), PageRequest.of(0, 10));
-
         assertThat(page).isNotNull();
         assertThat(page.getContent()).hasSize(1);
         assertThat(page.getContent().get(0).getTitle()).isEqualTo("Test Book");
