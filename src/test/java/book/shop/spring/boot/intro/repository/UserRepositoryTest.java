@@ -28,7 +28,7 @@ class UserRepositoryTest {
     @Test
     @DisplayName("existsByEmail should return true if user exists")
     void existsByEmail_ReturnsTrue_WhenUserExists() {
-        User user = TestEntityFactory.createTestUser("john@example.com");
+        User user = TestEntityFactory.createTestUser("test@example.com");
         userRepository.save(user);
 
         boolean exists = userRepository.existsByEmail("test@example.com");
@@ -39,7 +39,7 @@ class UserRepositoryTest {
     @Test
     @DisplayName("findByEmail should return user when exists")
     void findByEmail_ReturnsUser_WhenExists() {
-        User user = TestEntityFactory.createTestUser();
+        User user = TestEntityFactory.createTestUser("john@example.com");
         userRepository.save(user);
 
         Optional<User> found = userRepository.findByEmail("john@example.com");

@@ -43,7 +43,7 @@ class OrderRepositoryTest {
     @DisplayName("findAllByUserId should return all orders for user")
     void findAllByUserId_ShouldReturnOrders() {
         // given
-        User user = TestEntityFactory.createTestUser();
+        User user = TestEntityFactory.createTestUser("test@example.com");
         userRepository.save(user);
 
         Order order1 = new Order();
@@ -74,9 +74,7 @@ class OrderRepositoryTest {
     @DisplayName("findByIdAndUserId should return correct order")
     void findByIdAndUserId_ShouldReturnOrder() {
         // given
-        User user = new User();
-        user.setEmail("john@example.com");
-        user.setPassword("secret");
+        User user = TestEntityFactory.createTestUser("john@example.com");
         userRepository.save(user);
 
         Order order = new Order();
@@ -96,14 +94,9 @@ class OrderRepositoryTest {
     @DisplayName("findByIdAndUserId should return empty if user doesn't match")
     void findByIdAndUserId_ShouldReturnEmpty_WhenUserMismatch() {
         // given
-        User user1 = new User();
-        user1.setEmail("user1@example.com");
-        user1.setPassword("1");
+        User user1 = TestEntityFactory.createTestUser("user1@example.com");
         userRepository.save(user1);
-
-        User user2 = new User();
-        user2.setEmail("user2@example.com");
-        user2.setPassword("2");
+        User user2 = TestEntityFactory.createTestUser("user2@example.com");
         userRepository.save(user2);
 
         Order order = new Order();

@@ -48,7 +48,7 @@ class ShoppingCartRepositoryTest {
     @Test
     @DisplayName("existsByUserId should return true if cart exists")
     void existsByUserId_ReturnsTrue() {
-        User user = TestEntityFactory.createTestUser();
+        User user = TestEntityFactory.createTestUser("test2@cart.com");
         userRepository.save(user);
 
         ShoppingCart cart = new ShoppingCart();

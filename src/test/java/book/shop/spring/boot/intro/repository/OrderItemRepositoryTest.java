@@ -43,7 +43,7 @@ public class OrderItemRepositoryTest {
     @DisplayName("findAllByOrderId should return correct items")
     void findAllByOrderId_ReturnsItems() {
         // Create test user
-        User user = TestEntityFactory.createTestUser();
+        User user = TestEntityFactory.createTestUser("user@example.com");
         userRepository.save(user);
 
         // Create order
@@ -76,9 +76,7 @@ public class OrderItemRepositoryTest {
     @DisplayName("findByIdAndOrderIdAndOrderUserId should return correct item")
     void findByIdAndOrderIdAndUserId_ReturnsItem() {
         // Create test user
-        User user = new User();
-        user.setEmail("user2@example.com");
-        user.setPassword("encoded");
+        User user = TestEntityFactory.createTestUser("user2@example.com");
         userRepository.save(user);
 
         // Create order
