@@ -13,6 +13,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +51,7 @@ public class OrderItemRepositoryTest {
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
+        order.setOrderDate(LocalDateTime.now());
         orderRepository.save(order);
 
         // Create order item
@@ -83,6 +85,7 @@ public class OrderItemRepositoryTest {
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
+        order.setOrderDate(LocalDateTime.now());
         orderRepository.save(order);
 
         // Create order item
