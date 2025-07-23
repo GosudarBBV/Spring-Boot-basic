@@ -29,10 +29,7 @@ class BookRepositoryTest {
 
     @Container
     @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("book_shop_test")
-            .withUsername("user")
-            .withPassword("password");
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

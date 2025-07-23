@@ -26,10 +26,8 @@ public class OrderItemRepositoryTest {
 
     @Container
     @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("test_db")
-            .withUsername("test")
-            .withPassword("test");
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
+
 
     @Autowired
     private OrderItemRepository orderItemRepository;
