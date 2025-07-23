@@ -1,5 +1,7 @@
 package book.shop.spring.boot.intro.config;
 
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -25,5 +27,19 @@ public class TestRepositoryConfig {
                 .packages("book.shop.spring.boot.intro.model")
                 .properties(properties)
                 .build();
+    }
+
+    @Bean
+    public DataSourceProperties dataSourceProperties() {
+        DataSourceProperties properties = new DataSourceProperties();
+        properties.setUrl("jdbc:mysql://localhost:3306/book_shop_test");
+        properties.setUsername("user");
+        properties.setPassword("password");
+        return properties;
+    }
+
+    @Bean
+    public HibernatePropertiesCustomizer hibernatePropertiesCustomizer() {
+        return properties -> properties.put("hibernate.hbm2ddl.auto", "create");
     }
 }

@@ -32,8 +32,7 @@ class BookRepositoryTest {
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("book_shop_test")
             .withUsername("user")
-            .withPassword("password")
-            .withInitScript("init.sql");;
+            .withPassword("password");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
