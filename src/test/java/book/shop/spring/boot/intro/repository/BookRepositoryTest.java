@@ -59,8 +59,11 @@ class BookRepositoryTest {
         book.setTitle("Test Book");
         book.setAuthor("Author");
         book.setPrice(BigDecimal.valueOf(19.99));
-        book.setDescription("Description");
+        book.setDescription("A test description");
+        book.setIsbn("1234567890123");
+        book.setCoverImage("cover.jpg");
         book.setCategories(Set.of(category));
+        book.setDeleted(false);
         bookRepository.save(book);
 
         Page<Book> page = bookRepository.findAllByCategoriesId(category.getId(), PageRequest.of(0, 10));
