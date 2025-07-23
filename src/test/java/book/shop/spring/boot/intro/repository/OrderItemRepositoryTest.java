@@ -68,10 +68,10 @@ public class OrderItemRepositoryTest {
         book.setDescription("Test description");
         book.setCoverImage("cover.jpg");
         book.setDeleted(false);
-        bookRepository.save(book); // ✅ save book before using
+        bookRepository.save(book);
 
         OrderItem item = new OrderItem();
-        item.setBook(book); // ✅ already saved
+        item.setBook(book);
         item.setOrder(order);
         item.setQuantity(2);
         item.setPrice(BigDecimal.valueOf(100));
@@ -103,14 +103,21 @@ public class OrderItemRepositoryTest {
         orderRepository.save(order);
 
         // Create order item
-        OrderItem item = new OrderItem();
         Book book = new Book();
-        book.setTitle("Book 2");
-        book.setPrice(BigDecimal.valueOf(30));
+        book.setTitle("Book 1");
+        book.setAuthor("Author");
+        book.setPrice(BigDecimal.valueOf(50));
+        book.setIsbn("1234567890123");
+        book.setDescription("Test description");
+        book.setCoverImage("cover.jpg");
+        book.setDeleted(false);
+        bookRepository.save(book);
+
+        OrderItem item = new OrderItem();
         item.setBook(book);
         item.setOrder(order);
-        item.setQuantity(1);
-        item.setPrice(BigDecimal.valueOf(30));
+        item.setQuantity(2);
+        item.setPrice(BigDecimal.valueOf(100));
         orderItemRepository.save(item);
 
         Optional<OrderItem> result = orderItemRepository
