@@ -41,9 +41,7 @@ class OrderRepositoryTest {
     @DisplayName("findAllByUserId should return all orders for user")
     void findAllByUserId_ShouldReturnOrders() {
         // given
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setPassword("pass");
+        User user = TestEntityFactory.createTestUser();
         userRepository.save(user);
 
         Order order1 = new Order();

@@ -32,9 +32,7 @@ class ShoppingCartRepositoryTest {
     @Test
     @DisplayName("findByUserId should return cart for user")
     void findByUserId_ReturnsCart() {
-        User user = new User();
-        user.setEmail("test@cart.com");
-        user.setPassword("secret");
+        User user = TestEntityFactory.createTestUser();
         userRepository.save(user);
 
         ShoppingCart cart = new ShoppingCart();
@@ -50,9 +48,7 @@ class ShoppingCartRepositoryTest {
     @Test
     @DisplayName("existsByUserId should return true if cart exists")
     void existsByUserId_ReturnsTrue() {
-        User user = new User();
-        user.setEmail("test2@cart.com");
-        user.setPassword("secret");
+        User user = TestEntityFactory.createTestUser();
         userRepository.save(user);
 
         ShoppingCart cart = new ShoppingCart();

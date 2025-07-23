@@ -50,9 +50,7 @@ public class CartItemRepositoryTest {
     @Test
     @DisplayName("Find cart item by id and shopping cart id")
     void findByIdAndShoppingCartId_ReturnsItem() {
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setPassword("password");
+        User user = TestEntityFactory.createTestUser();
         userRepository.save(user);
 
         ShoppingCart cart = new ShoppingCart();

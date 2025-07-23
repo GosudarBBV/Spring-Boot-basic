@@ -43,9 +43,7 @@ public class OrderItemRepositoryTest {
     @DisplayName("findAllByOrderId should return correct items")
     void findAllByOrderId_ReturnsItems() {
         // Create test user
-        User user = new User();
-        user.setEmail("user@example.com");
-        user.setPassword("encoded");
+        User user = TestEntityFactory.createTestUser();
         userRepository.save(user);
 
         // Create order
