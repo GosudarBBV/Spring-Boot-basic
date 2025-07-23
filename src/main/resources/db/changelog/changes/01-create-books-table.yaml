@@ -34,8 +34,8 @@ databaseChangeLog:
                   name: cover_image
                   type: varchar(255)
               - column:
-                  name: deleted
-                  type: boolean
+                  name: is_deleted
+                  type: BIT
                   defaultValueBoolean: false
                   constraints:
                     nullable: false
