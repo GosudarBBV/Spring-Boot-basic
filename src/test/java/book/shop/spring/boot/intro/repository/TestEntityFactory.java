@@ -4,8 +4,12 @@ import book.shop.spring.boot.intro.model.User;
 
 public class TestEntityFactory {
     public static User createTestUser() {
+        return createTestUser("test@example.com");
+    }
+
+    public static User createTestUser(String email) {
         User user = new User();
-        user.setEmail("test@example.com");
+        user.setEmail(email);
         user.setPassword("password");
         user.setFirstName("John");
         user.setLastName("Doe");

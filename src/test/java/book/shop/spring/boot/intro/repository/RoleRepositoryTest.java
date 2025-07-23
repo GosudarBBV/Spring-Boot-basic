@@ -29,9 +29,11 @@ class RoleRepositoryTest {
     @Test
     @DisplayName("findByName should return role if exists")
     void findByName_ReturnsRole() {
-        Role role = new Role();
-        role.setName(RoleName.USER);
-        roleRepository.save(role);
+        if (roleRepository.findByName(RoleName.USER).isEmpty()) {
+            Role role = new Role();
+            role.setName(RoleName.USER);
+            roleRepository.save(role);
+        }
 
         Optional<Role> found = roleRepository.findByName(RoleName.USER);
 

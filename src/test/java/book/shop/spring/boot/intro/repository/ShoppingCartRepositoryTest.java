@@ -32,7 +32,7 @@ class ShoppingCartRepositoryTest {
     @Test
     @DisplayName("findByUserId should return cart for user")
     void findByUserId_ReturnsCart() {
-        User user = TestEntityFactory.createTestUser();
+        User user = TestEntityFactory.createTestUser("test@cart.com");
         userRepository.save(user);
 
         ShoppingCart cart = new ShoppingCart();

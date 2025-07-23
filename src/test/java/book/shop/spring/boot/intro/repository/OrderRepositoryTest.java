@@ -18,6 +18,8 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,11 +49,17 @@ class OrderRepositoryTest {
         Order order1 = new Order();
         order1.setUser(user);
         order1.setStatus(OrderStatus.PENDING);
+        order1.setOrderDate(LocalDateTime.now());
+        order1.setShippingAddress("Kyiv");
+        order1.setTotal(BigDecimal.ZERO);
         orderRepository.save(order1);
 
         Order order2 = new Order();
         order2.setUser(user);
         order2.setStatus(OrderStatus.DELIVERED);
+        order2.setOrderDate(LocalDateTime.now());
+        order2.setShippingAddress("Kyiv");
+        order2.setTotal(BigDecimal.ZERO);
         orderRepository.save(order2);
 
         // when
