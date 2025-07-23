@@ -121,6 +121,6 @@ public class OrderItemRepositoryTest {
                 .findByIdAndOrderIdAndOrderUserId(item.getId(), order.getId(), user.getId());
 
         assertThat(result).isPresent();
-        assertThat(result.get().getQuantity()).isEqualTo(1);
+        assertThat(result.get().getQuantity()).isEqualTo(2);
     }
 }
