@@ -80,6 +80,9 @@ class OrderRepositoryTest {
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
+        order.setOrderDate(LocalDateTime.now());
+        order.setShippingAddress("Kyiv");
+        order.setTotal(BigDecimal.ZERO);
         orderRepository.save(order);
 
         // when
@@ -102,6 +105,9 @@ class OrderRepositoryTest {
         Order order = new Order();
         order.setUser(user1);
         order.setStatus(OrderStatus.PENDING);
+        order.setOrderDate(LocalDateTime.now());
+        order.setShippingAddress("Kyiv");
+        order.setTotal(BigDecimal.ZERO);
         orderRepository.save(order);
 
         // when

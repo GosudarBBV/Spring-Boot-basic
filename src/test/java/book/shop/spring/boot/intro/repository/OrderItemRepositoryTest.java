@@ -52,6 +52,8 @@ public class OrderItemRepositoryTest {
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
         order.setOrderDate(LocalDateTime.now());
+        order.setShippingAddress("Kyiv");
+        order.setTotal(BigDecimal.ZERO);
         orderRepository.save(order);
 
         // Create order item
@@ -86,6 +88,8 @@ public class OrderItemRepositoryTest {
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
         order.setOrderDate(LocalDateTime.now());
+        order.setShippingAddress("Kyiv");
+        order.setTotal(BigDecimal.ZERO);
         orderRepository.save(order);
 
         // Create order item
