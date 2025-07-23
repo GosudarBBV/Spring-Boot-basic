@@ -19,7 +19,7 @@ import org.hibernate.annotations.SQLDelete;
 
 @Entity
 @Table(name = "order_items")
-@SQLDelete(sql = "UPDATE order_items SET deleted = true WHERE id = ?")
+@SQLDelete(sql = "UPDATE order_items SET is_deleted = true WHERE id = ?")
 @FilterDef(name = "deletedOrderItemsFilter", parameters = @ParamDef(name = "isDeleted",
         type = Boolean.class))
 @Filter(name = "deletedOrderItemsFilter",
