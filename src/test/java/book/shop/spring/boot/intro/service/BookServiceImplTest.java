@@ -1,5 +1,13 @@
 package book.shop.spring.boot.intro.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import book.shop.spring.boot.intro.dto.BookDto;
 import book.shop.spring.boot.intro.dto.BookDtoWithoutCategoryIds;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
@@ -10,6 +18,9 @@ import book.shop.spring.boot.intro.model.Book;
 import book.shop.spring.boot.intro.model.Category;
 import book.shop.spring.boot.intro.repository.BookRepository;
 import book.shop.spring.boot.intro.repository.CategoryRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,13 +28,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class BookServiceImplTest {
 
@@ -44,7 +48,8 @@ class BookServiceImplTest {
     @DisplayName("Save book with non-deleted categories")
     void save_WithValidDto_ReturnsBookDto() {
         CreateBookRequestDto request = new CreateBookRequestDto(
-                "Book Title", "Author Name", "1234567890", new BigDecimal("10.00"),
+                "Book Title", "Author Name", "1234567890",
+                new BigDecimal("10.00"),
                 "Description", "image.jpg", List.of(1L, 2L)
         );
 
@@ -63,7 +68,8 @@ class BookServiceImplTest {
         cat2.setDeleted(true); // має бути проігнорована
 
         when(bookMapper.toModel(request)).thenReturn(book);
-        when(categoryRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(cat1, cat2));
+        when(categoryRepository.findAllById(List.of(1L, 2L)))
+                .thenReturn(List.of(cat1, cat2));
         when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
         when(bookMapper.toDto(savedBook)).thenReturn(expectedDto);
 
@@ -75,7 +81,7 @@ class BookServiceImplTest {
 
         Book actualSavedBook = bookCaptor.getValue();
         assertThat(actualSavedBook.getCategories())
-                .hasSize(2); // збережено обидві, але це залежить від логіки — за потреби фільтруй явно
+                .hasSize(2);
     }
 
     @Test
@@ -166,7 +172,8 @@ class BookServiceImplTest {
         Long categoryId = 2L;
         Pageable pageable = Pageable.ofSize(5);
         Book book = new Book();
-        BookDtoWithoutCategoryIds dto = new BookDtoWithoutCategoryIds(1L, "title", "author", BigDecimal.ONE, "desc");
+        BookDtoWithoutCategoryIds dto = new BookDtoWithoutCategoryIds(1L,
+                "title", "author", BigDecimal.ONE, "desc");
         Page<Book> page = new PageImpl<>(List.of(book));
 
         when(bookRepository.findAllByCategoriesId(categoryId, pageable)).thenReturn(page);

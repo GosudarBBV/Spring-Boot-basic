@@ -1,8 +1,12 @@
 package book.shop.spring.boot.intro.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import book.shop.spring.boot.intro.config.TestRepositoryConfig;
 import book.shop.spring.boot.intro.model.Book;
 import book.shop.spring.boot.intro.model.Category;
+import java.math.BigDecimal;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +20,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.math.BigDecimal;
-import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Testcontainers
@@ -63,7 +62,8 @@ class BookRepositoryTest {
         book.setDeleted(false);
         bookRepository.save(book);
 
-        Page<Book> page = bookRepository.findAllByCategoriesId(category.getId(), PageRequest.of(0, 10));
+        Page<Book> page = bookRepository.findAllByCategoriesId(category.getId(),
+                PageRequest.of(0, 10));
         assertThat(page).isNotNull();
         assertThat(page.getContent()).hasSize(1);
         assertThat(page.getContent().get(0).getTitle()).isEqualTo("Test Book");
@@ -72,7 +72,8 @@ class BookRepositoryTest {
     @Test
     @DisplayName("Find books by category ID - empty result")
     void findAllByCategoriesId_InvalidId_ReturnsEmptyPage() {
-        Page<Book> page = bookRepository.findAllByCategoriesId(999L, PageRequest.of(0, 10));
+        Page<Book> page = bookRepository.findAllByCategoriesId(999L,
+                PageRequest.of(0, 10));
         assertThat(page).isNotNull();
         assertThat(page.getContent()).isEmpty();
     }

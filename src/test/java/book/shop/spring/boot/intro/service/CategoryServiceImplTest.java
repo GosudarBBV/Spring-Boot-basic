@@ -1,20 +1,22 @@
 package book.shop.spring.boot.intro.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import book.shop.spring.boot.intro.dto.CategoryResponseDto;
 import book.shop.spring.boot.intro.dto.CreateCategoryRequestDto;
 import book.shop.spring.boot.intro.exception.EntityNotFoundException;
 import book.shop.spring.boot.intro.mapper.CategoryMapper;
 import book.shop.spring.boot.intro.model.Category;
 import book.shop.spring.boot.intro.repository.CategoryRepository;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class CategoryServiceImplTest {
 
@@ -63,7 +65,8 @@ class CategoryServiceImplTest {
 
         when(categoryRepository.findById(id)).thenReturn(Optional.of(category));
 
-        CategoryResponseDto expectedDto = new CategoryResponseDto(id, "Fiction", null);
+        CategoryResponseDto expectedDto = new CategoryResponseDto(id,
+                "Fiction", null);
         when(categoryMapper.toResponseDto(category)).thenReturn(expectedDto);
 
         CategoryResponseDto result = categoryService.getById(id);
@@ -85,7 +88,8 @@ class CategoryServiceImplTest {
     @Test
     @DisplayName("Save category - returns DTO")
     void save_ValidDto_ReturnsDto() {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy", "Magic books");
+        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy",
+                "Magic books");
 
         Category category = new Category();
         category.setName("Fantasy");
@@ -95,7 +99,8 @@ class CategoryServiceImplTest {
         savedCategory.setId(1L);
         savedCategory.setName("Fantasy");
 
-        CategoryResponseDto expectedDto = new CategoryResponseDto(1L, "Fantasy", "Magic books");
+        CategoryResponseDto expectedDto = new CategoryResponseDto(1L, "Fantasy",
+                "Magic books");
 
         when(categoryMapper.toEntity(request)).thenReturn(category);
         when(categoryRepository.save(category)).thenReturn(savedCategory);
@@ -110,7 +115,8 @@ class CategoryServiceImplTest {
     @DisplayName("Update category - success")
     void update_ValidId_ReturnsDto() {
         Long id = 1L;
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy", "Updated desc");
+        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy",
+                "Updated desc");
 
         Category existing = new Category();
         existing.setId(id);
@@ -120,7 +126,8 @@ class CategoryServiceImplTest {
         saved.setId(id);
         saved.setName("Fantasy");
 
-        CategoryResponseDto expectedDto = new CategoryResponseDto(id, "Fantasy", "Updated desc");
+        CategoryResponseDto expectedDto = new CategoryResponseDto(id, "Fantasy",
+                "Updated desc");
 
         when(categoryRepository.findById(id)).thenReturn(Optional.of(existing));
         when(categoryRepository.save(existing)).thenReturn(saved);
@@ -135,7 +142,8 @@ class CategoryServiceImplTest {
     @DisplayName("Update category - throws if not found")
     void update_InvalidId_ThrowsException() {
         Long id = 1L;
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Any", "Desc");
+        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Any",
+                "Desc");
 
         when(categoryRepository.findById(id)).thenReturn(Optional.empty());
 

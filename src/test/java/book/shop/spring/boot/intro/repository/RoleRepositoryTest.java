@@ -1,7 +1,10 @@
 package book.shop.spring.boot.intro.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import book.shop.spring.boot.intro.model.Role;
 import book.shop.spring.boot.intro.model.RoleName;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +13,6 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Testcontainers

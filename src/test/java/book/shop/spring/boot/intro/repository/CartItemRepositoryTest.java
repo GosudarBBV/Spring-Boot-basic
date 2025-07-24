@@ -1,7 +1,15 @@
 package book.shop.spring.boot.intro.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import book.shop.spring.boot.intro.config.TestRepositoryConfig;
-import book.shop.spring.boot.intro.model.*;
+import book.shop.spring.boot.intro.model.Book;
+import book.shop.spring.boot.intro.model.CartItem;
+import book.shop.spring.boot.intro.model.ShoppingCart;
+import book.shop.spring.boot.intro.model.User;
+import book.shop.spring.boot.intro.util.TestEntityFactory;
+import java.math.BigDecimal;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +21,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.math.BigDecimal;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Testcontainers

@@ -1,4 +1,4 @@
-package book.shop.spring.boot.intro.repository;
+package book.shop.spring.boot.intro.util;
 
 import book.shop.spring.boot.intro.model.User;
 

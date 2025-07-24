@@ -1,5 +1,13 @@
 package book.shop.spring.boot.intro.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import book.shop.spring.boot.intro.dto.ShoppingCartResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateCartItemRequestDto;
 import book.shop.spring.boot.intro.exception.EntityNotFoundException;
@@ -10,17 +18,11 @@ import book.shop.spring.boot.intro.model.ShoppingCart;
 import book.shop.spring.boot.intro.repository.BookRepository;
 import book.shop.spring.boot.intro.repository.CartItemRepository;
 import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
+import java.util.HashSet;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class ShoppingCartServiceImplTest {
 
@@ -166,7 +168,8 @@ class ShoppingCartServiceImplTest {
         cart.setId(10L);
 
         when(shoppingCartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
-        when(cartItemRepository.findByIdAndShoppingCartId(1L, 10L)).thenReturn(Optional.empty());
+        when(cartItemRepository.findByIdAndShoppingCartId(1L, 10L))
+                .thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class,
                 () -> shoppingCartService.removeCartItem(1L, 1L));

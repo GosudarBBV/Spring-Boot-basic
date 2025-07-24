@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;

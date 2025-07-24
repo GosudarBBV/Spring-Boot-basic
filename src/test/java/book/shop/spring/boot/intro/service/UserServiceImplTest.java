@@ -1,5 +1,14 @@
 package book.shop.spring.boot.intro.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import book.shop.spring.boot.intro.dto.UserRegistrationRequestDto;
 import book.shop.spring.boot.intro.dto.UserResponseDto;
 import book.shop.spring.boot.intro.exception.EntityNotFoundException;
@@ -12,6 +21,7 @@ import book.shop.spring.boot.intro.model.User;
 import book.shop.spring.boot.intro.repository.RoleRepository;
 import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
 import book.shop.spring.boot.intro.repository.UserRepository;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,12 +30,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class UserServiceImplTest {
 

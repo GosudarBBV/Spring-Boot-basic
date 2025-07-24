@@ -1,24 +1,5 @@
 package book.shop.spring.boot.intro.controller;
 
-import book.shop.spring.boot.intro.config.TestSecurityConfig;
-import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
-import book.shop.spring.boot.intro.dto.CartItemResponseDto;
-import book.shop.spring.boot.intro.dto.ShoppingCartResponseDto;
-import book.shop.spring.boot.intro.dto.UpdateCartItemRequestDto;
-import book.shop.spring.boot.intro.security.JwtUtil;
-import book.shop.spring.boot.intro.service.ShoppingCartService;
-import book.shop.spring.boot.intro.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.web.servlet.MockMvc;
-import java.util.List;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -28,6 +9,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import book.shop.spring.boot.intro.config.TestSecurityConfig;
+import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
+import book.shop.spring.boot.intro.dto.CartItemResponseDto;
+import book.shop.spring.boot.intro.dto.ShoppingCartResponseDto;
+import book.shop.spring.boot.intro.dto.UpdateCartItemRequestDto;
+import book.shop.spring.boot.intro.security.JwtUtil;
+import book.shop.spring.boot.intro.service.ShoppingCartService;
+import book.shop.spring.boot.intro.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ShoppingCartController.class)
 @Import(TestSecurityConfig.class)

@@ -1,14 +1,34 @@
 package book.shop.spring.boot.intro.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import book.shop.spring.boot.intro.dto.OrderItemDto;
 import book.shop.spring.boot.intro.dto.OrderResponseDto;
 import book.shop.spring.boot.intro.exception.EntityNotFoundException;
 import book.shop.spring.boot.intro.exception.OrderProcessingException;
 import book.shop.spring.boot.intro.mapper.OrderMapper;
-import book.shop.spring.boot.intro.model.*;
+import book.shop.spring.boot.intro.model.Book;
+import book.shop.spring.boot.intro.model.CartItem;
+import book.shop.spring.boot.intro.model.Order;
+import book.shop.spring.boot.intro.model.OrderItem;
+import book.shop.spring.boot.intro.model.OrderStatus;
+import book.shop.spring.boot.intro.model.ShoppingCart;
+import book.shop.spring.boot.intro.model.User;
 import book.shop.spring.boot.intro.repository.OrderItemRepository;
 import book.shop.spring.boot.intro.repository.OrderRepository;
 import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,13 +39,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import java.math.BigDecimal;
-import java.util.*;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class OrderServiceImplTest {
 

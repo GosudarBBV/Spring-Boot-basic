@@ -1,5 +1,17 @@
 package book.shop.spring.boot.intro.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.BookDtoWithoutCategoryIds;
 import book.shop.spring.boot.intro.dto.CategoryResponseDto;
@@ -8,6 +20,9 @@ import book.shop.spring.boot.intro.security.JwtUtil;
 import book.shop.spring.boot.intro.service.BookService;
 import book.shop.spring.boot.intro.service.CategoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,17 +34,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CategoryController.class)
 @Import(TestSecurityConfig.class)
@@ -53,8 +57,10 @@ public class CategoryControllerTest {
     @Test
     @DisplayName("Create category - should return created category")
     void createCategory_ValidRequest_ReturnsCreatedCategory() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy", "Magical books");
-        CategoryResponseDto response = new CategoryResponseDto(1L, "Fantasy", "Magical books");
+        CreateCategoryRequestDto request
+                = new CreateCategoryRequestDto("Fantasy", "Magical books");
+        CategoryResponseDto response
+                = new CategoryResponseDto(1L, "Fantasy", "Magical books");
 
         when(categoryService.save(any(CreateCategoryRequestDto.class))).thenReturn(response);
 
@@ -70,7 +76,8 @@ public class CategoryControllerTest {
     @Test
     @DisplayName("Get all categories - should return list")
     void getAllCategories_ReturnsList() throws Exception {
-        CategoryResponseDto category = new CategoryResponseDto(1L, "Fiction", "Fictional books");
+        CategoryResponseDto category = new CategoryResponseDto(1L,
+                "Fiction", "Fictional books");
         when(categoryService.findAll()).thenReturn(List.of(category));
 
         mockMvc.perform(get("/categories")
@@ -82,7 +89,8 @@ public class CategoryControllerTest {
     @Test
     @DisplayName("Get category by ID - should return category")
     void getCategoryById_ReturnsCategory() throws Exception {
-        CategoryResponseDto category = new CategoryResponseDto(1L, "Fiction", "Fictional books");
+        CategoryResponseDto category = new CategoryResponseDto(1L,
+                "Fiction", "Fictional books");
         when(categoryService.getById(1L)).thenReturn(category);
 
         mockMvc.perform(get("/categories/1")
@@ -94,8 +102,10 @@ public class CategoryControllerTest {
     @Test
     @DisplayName("Update category - should return updated category")
     void updateCategory_ReturnsUpdatedCategory() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Updated", "Updated desc");
-        CategoryResponseDto response = new CategoryResponseDto(1L, "Updated", "Updated desc");
+        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Updated",
+                "Updated desc");
+        CategoryResponseDto response = new CategoryResponseDto(1L,
+                "Updated", "Updated desc");
 
         when(categoryService.update(any(Long.class), any(CreateCategoryRequestDto.class)))
                 .thenReturn(response);

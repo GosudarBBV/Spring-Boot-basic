@@ -1,9 +1,15 @@
 package book.shop.spring.boot.intro.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import book.shop.spring.boot.intro.config.TestRepositoryConfig;
 import book.shop.spring.boot.intro.model.Order;
 import book.shop.spring.boot.intro.model.OrderStatus;
 import book.shop.spring.boot.intro.model.User;
+import book.shop.spring.boot.intro.util.TestEntityFactory;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,17 +18,9 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Testcontainers
@@ -63,11 +61,14 @@ class OrderRepositoryTest {
         orderRepository.save(order2);
 
         // when
-        Page<Order> orders = orderRepository.findAllByUserId(user.getId(), PageRequest.of(0, 10));
+        Page<Order> orders = orderRepository.findAllByUserId(user.getId(),
+                PageRequest.of(0, 10));
 
         // then
         assertThat(orders).hasSize(2);
-        assertThat(orders.getContent()).extracting("user.id").containsOnly(user.getId());
+        assertThat(orders.getContent())
+                .extracting("user.id")
+                .containsOnly(user.getId());
     }
 
     @Test
