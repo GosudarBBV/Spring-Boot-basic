@@ -1,2 +1,2 @@
-INSERT INTO categories (name, description)
-VALUES ('Fiction', 'Fiction books');
+INSERT INTO categories (id, name, description, is_deleted)
+VALUES (1, 'Fiction', 'Fiction books', false);

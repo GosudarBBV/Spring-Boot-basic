@@ -2,16 +2,12 @@ package book.shop.spring.boot.intro.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import book.shop.spring.boot.intro.config.TestRepositoryConfig;
 import book.shop.spring.boot.intro.model.Book;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -43,7 +39,8 @@ class BookRepositoryTest {
     @DisplayName("Find books by category ID - returns correct page")
     @Sql(scripts = {
             "classpath:database/insert-category.sql",
-            "classpath:database/insert-book-with-category.sql"
+            "classpath:database/insert-book.sql",
+            "classpath:database/insert-books_categories.sql"
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = "classpath:database/clear-tables.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findAllByCategoriesId_ValidId_ReturnsBooks() {
