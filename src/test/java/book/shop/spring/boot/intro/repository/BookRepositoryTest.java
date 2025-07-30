@@ -22,7 +22,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(TestRepositoryConfig.class)
 class BookRepositoryTest {
 
     @Container
@@ -43,7 +42,7 @@ class BookRepositoryTest {
     @Sql(scripts = {
             "classpath:database/insert-category.sql",
             "classpath:database/insert-book.sql",
-            "classpath:database/insert-books_categories.sql"
+            "classpath:database/insert-books_categories.sql",
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = "classpath:database/clear-tables.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findAllByCategoriesId_ValidId_ReturnsBooks() {
