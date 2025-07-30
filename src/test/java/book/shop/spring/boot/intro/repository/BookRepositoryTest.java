@@ -7,6 +7,7 @@ import book.shop.spring.boot.intro.model.Book;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -22,10 +23,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @DataJpaTest
 @Testcontainers
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class BookRepositoryTest {
 
     @Container
-    @ServiceConnection
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
 
     @DynamicPropertySource
@@ -41,10 +42,10 @@ class BookRepositoryTest {
     @Test
     @DisplayName("Find books by category ID - returns correct page")
     @Sql(scripts = {
-            "/database/clear-tables.sql",
-            "/database/insert-category.sql",
-            "/database/insert-book-with-category.sql"
-    })
+            "classpath:database/insert-category.sql",
+            "classpath:database/insert-book-with-category.sql"
+    }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:database/clear-tables.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findAllByCategoriesId_ValidId_ReturnsBooks() {
         Long categoryId = 1L;
 
@@ -59,7 +60,7 @@ class BookRepositoryTest {
 
     @Test
     @DisplayName("Find books by category ID - empty result")
-    @Sql(scripts = "/database/clear-tables.sql")
+    @Sql(scripts = "classpath:database/clear-tables.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     void findAllByCategoriesId_InvalidId_ReturnsEmptyPage() {
         Page<Book> page = bookRepository.findAllByCategoriesId(999L, PageRequest.of(0, 10));
         assertThat(page).isNotNull();
