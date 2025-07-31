@@ -21,7 +21,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestPropertySource(properties = {
-        "spring.liquibase.enabled=false"
+        "spring.liquibase.enabled=false",
+        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect",
+        "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver"
 })
 class BookRepositoryTest {
 
