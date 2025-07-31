@@ -1,8 +1,8 @@
-DELETE FROM books_categories;
-DELETE FROM cart_items;
-DELETE FROM orders;
-DELETE FROM order_items;
-DELETE FROM shopping_carts;
-DELETE FROM books;
-DELETE FROM categories;
-DELETE FROM users;
+DROP TABLE IF EXISTS books_categories;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS cart_items;
+DROP TABLE IF EXISTS shopping_carts;
+DROP TABLE IF EXISTS books;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS users;
