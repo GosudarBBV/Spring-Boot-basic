@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -26,6 +27,16 @@ import org.testcontainers.junit.jupiter.Testcontainers;
         "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver"
 })
 class BookRepositoryTest {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Test
+    void checkDataInDb() {
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM books", Integer.class);
+        System.out.println("Books count in DB: " + count);
+        assertThat(count).isGreaterThan(0);
+    }
 
     @Container
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
@@ -46,7 +57,7 @@ class BookRepositoryTest {
             "classpath:database/schema.sql",
             "classpath:database/insert-category.sql",
             "classpath:database/insert-book.sql",
-            "classpath:database/insert-books_categories.sql",
+            "classpath:database/insert-books-with-category.sql",
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = "classpath:database/clear-tables.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findAllByCategoriesId_ValidId_ReturnsBooks() {
