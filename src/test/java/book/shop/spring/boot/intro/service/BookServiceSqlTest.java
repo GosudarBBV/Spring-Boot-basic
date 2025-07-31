@@ -8,11 +8,13 @@ import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import java.math.BigDecimal;
 import java.util.List;
 
+import book.shop.spring.boot.intro.security.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
@@ -24,6 +26,9 @@ public class BookServiceSqlTest {
 
     @Autowired
     private BookService bookService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
 
     @Test
     @DisplayName("Save book with valid data and only non-deleted categories")
