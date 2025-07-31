@@ -40,6 +40,7 @@ class BookRepositoryTest {
     @Test
     @DisplayName("Find books by category ID - returns correct page")
     @Sql(scripts = {
+            "classpath:database/schema.sql",
             "classpath:database/insert-category.sql",
             "classpath:database/insert-book.sql",
             "classpath:database/insert-books_categories.sql",
