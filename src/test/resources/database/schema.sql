@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS books;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 1. Таблиця books
+-- 1. Таблиця bookі
 CREATE TABLE books (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255),
