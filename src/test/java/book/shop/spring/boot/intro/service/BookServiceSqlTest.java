@@ -2,6 +2,7 @@ package book.shop.spring.boot.intro.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.BookDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import java.math.BigDecimal;
@@ -12,11 +13,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @SpringBootTest
+@Import(TestSecurityConfig.class)
 public class BookServiceSqlTest {
 
     @Autowired
