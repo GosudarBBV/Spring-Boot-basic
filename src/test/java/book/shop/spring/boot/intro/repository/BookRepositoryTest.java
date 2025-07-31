@@ -33,6 +33,7 @@ class BookRepositoryTest {
         registry.add("spring.datasource.username", mysql::getUsername);
         registry.add("spring.datasource.password", mysql::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
+        registry.add("spring.liquibase.enabled", () -> "false");
     }
 
     @Autowired
