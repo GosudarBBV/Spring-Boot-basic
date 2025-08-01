@@ -16,10 +16,10 @@ import org.springframework.test.context.jdbc.Sql;
 @DisplayName("CartItemRepository integration tests")
 @Sql(scripts = "classpath:database/schemas/cart-items-schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = {
-        "classpath:database/shopping-carts/add-shopping-cart-and-items.sql"
+        "classpath:database/cart-items/add-shopping-cart-and-items.sql"
 }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = {
-        "classpath:database/shopping-carts/clear-shopping-cart-and-items.sql"
+        "classpath:database/cart-items/clear-shopping-cart-and-items.sql"
 }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 public class CartItemRepositoryTest {
 
