@@ -20,7 +20,7 @@ import org.springframework.test.context.jdbc.Sql;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("Find books by existed category id")
-@Sql(scripts = "classpath:database/schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:database/schemas/books.schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = {
         "classpath:database/books/add-books-to-table.sql",
         "classpath:database/categories/add-categories-to-table.sql",
@@ -49,5 +49,16 @@ public class BookRepositoryTest {
         assertThat(result.getContent())
                 .extracting(Book::getTitle)
                 .containsExactlyInAnyOrder("Test Book 1", "Test Book 2");
+    }
+
+    @Test
+    @DisplayName("Find books by non-existing category ID - returns empty")
+    void findAllByCategoryId_InvalidId_ReturnsEmptyPage() {
+        Long invalidCategoryId = 999L;
+
+        Page<Book> result = bookRepository.findAllByCategoriesId(invalidCategoryId, PageRequest.of(0, 10));
+
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).isEmpty();
     }
 }

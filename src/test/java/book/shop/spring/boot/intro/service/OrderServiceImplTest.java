@@ -1,0 +1,209 @@
+package book.shop.spring.boot.intro.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import book.shop.spring.boot.intro.dto.OrderItemDto;
+import book.shop.spring.boot.intro.dto.OrderResponseDto;
+import book.shop.spring.boot.intro.exception.EntityNotFoundException;
+import book.shop.spring.boot.intro.exception.OrderProcessingException;
+import book.shop.spring.boot.intro.mapper.OrderMapper;
+import book.shop.spring.boot.intro.model.Book;
+import book.shop.spring.boot.intro.model.CartItem;
+import book.shop.spring.boot.intro.model.Order;
+import book.shop.spring.boot.intro.model.OrderItem;
+import book.shop.spring.boot.intro.model.OrderStatus;
+import book.shop.spring.boot.intro.model.ShoppingCart;
+import book.shop.spring.boot.intro.model.User;
+import book.shop.spring.boot.intro.repository.OrderItemRepository;
+import book.shop.spring.boot.intro.repository.OrderRepository;
+import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
+class OrderServiceImplTest {
+
+    @Mock
+    private ShoppingCartRepository cartRepository;
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private OrderItemRepository orderItemRepository;
+
+    @Mock
+    private OrderMapper orderMapper;
+
+    @InjectMocks
+    private OrderServiceImpl orderService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    @DisplayName("Place order successfully")
+    void placeOrder_Success() {
+        Long userId = 1L;
+        String address = "Kyiv, Ukraine";
+
+        Book book = new Book();
+        book.setPrice(BigDecimal.valueOf(20));
+
+        CartItem cartItem = new CartItem();
+        cartItem.setBook(book);
+        cartItem.setQuantity(2);
+
+        Set<CartItem> cartItems = new HashSet<>();
+        cartItems.add(cartItem);
+
+        User user = new User();
+        user.setId(userId);
+
+        ShoppingCart cart = new ShoppingCart();
+        cart.setUser(user);
+        cart.setCartItems(cartItems);
+
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        OrderResponseDto expectedDto = mock(OrderResponseDto.class);
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        when(orderMapper.toDto(any(Order.class))).thenReturn(expectedDto);
+
+        OrderResponseDto actual = orderService.placeOrder(userId, address);
+
+        verify(orderRepository).save(orderCaptor.capture());
+        verify(cartRepository).save(cart);
+        assertEquals(expectedDto, actual);
+
+        Order savedOrder = orderCaptor.getValue();
+        assertEquals(address, savedOrder.getShippingAddress());
+        assertEquals(OrderStatus.PENDING, savedOrder.getStatus());
+        assertEquals(user, savedOrder.getUser());
+        assertThat(savedOrder.getTotal()).isEqualByComparingTo(BigDecimal.valueOf(40));
+    }
+
+    @Test
+    @DisplayName("Throw when shopping cart is empty")
+    void placeOrder_EmptyCart_Throws() {
+        Long userId = 1L;
+        ShoppingCart cart = new ShoppingCart();
+        cart.setUser(new User());
+        cart.setCartItems(Set.of());
+
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(cart));
+
+        assertThrows(OrderProcessingException.class, () ->
+                orderService.placeOrder(userId, "Kyiv"));
+    }
+
+    @Test
+    @DisplayName("Throw when shopping cart not found")
+    void placeOrder_NoCart_Throws() {
+        when(cartRepository.findByUserId(1L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () ->
+                orderService.placeOrder(1L, "Kyiv"));
+    }
+
+    @Test
+    @DisplayName("Get order history by user ID")
+    void getOrderHistory_Success() {
+        Long userId = 1L;
+        Order order = new Order();
+        Page<Order> page = new PageImpl<>(List.of(order));
+        OrderResponseDto dto = mock(OrderResponseDto.class);
+
+        when(orderRepository.findAllByUserId(eq(userId), any(Pageable.class)))
+                .thenReturn(page);
+        when(orderMapper.toDto(any(Order.class))).thenReturn(dto);
+
+        Page<OrderResponseDto> result = orderService.getOrderHistory(userId, Pageable.unpaged());
+
+        assertEquals(1, result.getContent().size());
+        assertEquals(dto, result.getContent().get(0));
+    }
+
+    @Test
+    @DisplayName("Get order items by order ID and user ID")
+    void getOrderItems_Success() {
+        Long userId = 1L;
+        Long orderId = 10L;
+
+        Order order = new Order();
+        order.setUser(new User());
+        order.setId(orderId);
+
+        when(orderRepository.findByIdAndUserId(orderId, userId))
+                .thenReturn(Optional.of(order));
+
+        OrderItem item = new OrderItem();
+        when(orderItemRepository.findAllByOrderId(orderId))
+                .thenReturn(List.of(item));
+
+        OrderItemDto dto = mock(OrderItemDto.class);
+        when(orderMapper.toOrderItemDto(item)).thenReturn(dto);
+
+        List<OrderItemDto> result = orderService.getOrderItems(orderId, userId);
+        assertEquals(1, result.size());
+        assertEquals(dto, result.get(0));
+    }
+
+    @Test
+    @DisplayName("Get order item by IDs")
+    void getOrderItem_Success() {
+        Long orderId = 1L;
+        Long itemId = 2L;
+        Long userId = 3L;
+
+        OrderItem item = new OrderItem();
+        OrderItemDto dto = new OrderItemDto(2L, 4L, 1);
+
+        when(orderItemRepository.findByIdAndOrderIdAndOrderUserId(itemId, orderId, userId))
+                .thenReturn(Optional.of(item));
+        when(orderMapper.toOrderItemDto(item)).thenReturn(dto);
+
+        OrderItemDto result = orderService.getOrderItem(orderId, itemId, userId);
+
+        assertEquals(dto, result);
+    }
+
+    @Test
+    @DisplayName("Update order status by ID")
+    void updateStatus_Success() {
+        Long orderId = 1L;
+        OrderStatus status = OrderStatus.PENDING;
+        Order order = new Order();
+        order.setId(orderId);
+
+        OrderResponseDto dto = mock(OrderResponseDto.class);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderMapper.toDto(order)).thenReturn(dto);
+
+        OrderResponseDto result = orderService.updateStatus(orderId, status);
+
+        assertEquals(dto, result);
+        assertEquals(status, order.getStatus());
+    }
+}
