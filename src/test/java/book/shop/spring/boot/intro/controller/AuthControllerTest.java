@@ -56,7 +56,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Login with valid credentials returns token")
     void login_ValidCredentials_ReturnsToken() throws Exception {
-        // Спочатку зареєструємо користувача
+        // Спочатку реєструємо користувача
         UserRegistrationRequestDto registration = new UserRegistrationRequestDto();
         registration.setEmail("loginuser@example.com");
         registration.setPassword("pass123");
@@ -71,7 +71,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(registration)))
                 .andExpect(status().isOk());
 
-        // Тепер логін
+        // Логін
         UserLoginRequestDto login = new UserLoginRequestDto("loginuser@example.com", "pass123");
 
         mockMvc.perform(post("/auth/login")

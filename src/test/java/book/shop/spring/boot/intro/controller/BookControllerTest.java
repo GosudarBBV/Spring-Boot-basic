@@ -148,7 +148,6 @@ class BookControllerTest {
     @Test
     @DisplayName("Delete book by ID - success")
     void deleteById_ValidId_ReturnsNoContent() throws Exception {
-        // Створюємо книгу
         var createRequest = new CreateBookRequestDto(
                 "To be deleted",
                 "Author",
@@ -169,13 +168,11 @@ class BookControllerTest {
 
         long bookId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
 
-        // Видаляємо книгу
         mockMvc.perform(delete("/books/{id}", bookId)
                         .with(csrf())
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 
-        // Перевіряємо, що книга видалена (має бути 404)
         mockMvc.perform(get("/books/{id}", bookId)
                         .with(csrf())
                         .with(user("user").roles("USER")))
