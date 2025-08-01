@@ -22,15 +22,15 @@ import org.springframework.test.context.jdbc.Sql;
         AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("Find books by existed category id")
 @Sql(scripts = {
-        "classpath:database/test/books/add-books-to-table.sql",
-        "classpath:database/test/categories/add-categories-to-table.sql",
-        "classpath:database/test/books/add-books-and-categories-into-table.sql",
+        "classpath:database/books/add-books-to-table.sql",
+        "classpath:database/categories/add-categories-to-table.sql",
+        "classpath:database/books/add-books-and-categories-into-table.sql",
 },
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = {
-        "classpath:database/test/books/delete-books-categories.sql",
-        "classpath:database/test/books/remove-books-from-table-books.sql",
-        "classpath:database/test/categories/delete-categories.sql",
+        "classpath:database/books/delete-books-categories.sql",
+        "classpath:database/books/remove-books-from-table-books.sql",
+        "classpath:database/categories/delete-categories.sql",
 },
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 public class BookRepositoryTest {
