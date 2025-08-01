@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS books_categories;
+DROP TABLE IF EXISTS books;
+DROP TABLE IF EXISTS categories;
+
 CREATE TABLE categories (
     id BIGINT PRIMARY KEY,
     name VARCHAR(255) NOT NULL
