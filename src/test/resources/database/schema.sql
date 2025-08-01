@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS books_categories;
 DROP TABLE IF EXISTS books;
 DROP TABLE IF EXISTS categories;
