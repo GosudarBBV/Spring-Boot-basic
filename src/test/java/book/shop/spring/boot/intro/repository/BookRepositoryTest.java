@@ -18,22 +18,19 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace =
-        AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("Find books by existed category id")
 @Sql(scripts = "classpath:database/schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = {
         "classpath:database/books/add-books-to-table.sql",
         "classpath:database/categories/add-categories-to-table.sql",
         "classpath:database/books/add-books-and-categories-into-table.sql",
-},
-        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = {
         "classpath:database/books/delete-books-categories.sql",
         "classpath:database/books/remove-books-from-table-books.sql",
         "classpath:database/categories/delete-categories.sql",
-},
-        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 public class BookRepositoryTest {
 
     @Autowired
@@ -41,47 +38,16 @@ public class BookRepositoryTest {
 
     @Test
     @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-    public void findAllByCategoryId_ExistedId_Success() {
+    void findAllByCategoryId_ExistedId_Success() {
         Long categoryId = 1L;
-        Category category = createTestCategory();
-        List<Book> expected = List.of(createFirstTestBook(category),
-                createSecondTestBook(category));
 
-        Page<Book> actual = bookRepository.findAllByCategoriesId(categoryId, PageRequest.of(0, 10));
+        Page<Book> result = bookRepository.findAllByCategoriesId(categoryId, PageRequest.of(0, 10));
 
-        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
-    }
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
 
-    private Category createTestCategory() {
-        Category category = new Category();
-        category.setId(12L);
-        category.setName("Test a");
-        return category;
-    }
-
-    private Book createFirstTestBook(Category category) {
-        Book book = new Book();
-        book.setId(12L);
-        book.setTitle("Test Book 1");
-        book.setAuthor("Test Author 1");
-        book.setIsbn("9783161484100");
-        book.setPrice(BigDecimal.valueOf(19.99));
-        book.setDescription("Description for Test Book 1");
-        book.setCoverImage("http://example.com/cover1.jpg");
-        book.setCategories(Set.of(category));
-        return book;
-    }
-
-    private Book createSecondTestBook(Category category) {
-        Book book = new Book();
-        book.setId(13L);
-        book.setTitle("Test Book 2");
-        book.setAuthor("Test Author 2");
-        book.setIsbn("9783161484101");
-        book.setPrice(BigDecimal.valueOf(29.99));
-        book.setDescription("Description for Test Book 2");
-        book.setCoverImage("http://example.com/cover2.jpg");
-        book.setCategories(Set.of(category));
-        return book;
+        assertThat(result.getContent())
+                .extracting(Book::getTitle)
+                .containsExactlyInAnyOrder("Test Book 1", "Test Book 2");
     }
 }

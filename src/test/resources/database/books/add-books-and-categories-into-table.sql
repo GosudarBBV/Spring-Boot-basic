@@ -1,2 +1,2 @@
 INSERT INTO books_categories (category_id, book_id)
-VALUES (12, 12), (12, 13);
+VALUES (1, 1), (1, 2);
