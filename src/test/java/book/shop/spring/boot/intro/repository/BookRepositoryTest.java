@@ -21,6 +21,7 @@ import org.springframework.test.context.jdbc.Sql;
 @AutoConfigureTestDatabase(replace =
         AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("Find books by existed category id")
+@Sql(scripts = "classpath:database/schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = {
         "classpath:database/books/add-books-to-table.sql",
         "classpath:database/categories/add-categories-to-table.sql",
