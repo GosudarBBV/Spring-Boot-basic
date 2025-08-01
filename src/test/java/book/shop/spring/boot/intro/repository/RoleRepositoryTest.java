@@ -8,19 +8,21 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
+import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @DataJpaTest
 @Testcontainers
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Sql(scripts = "classpath:database/schemas/roles-schema.sql",
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:database/roles/add-roles.sql",
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:database/roles/clear-roles.sql",
+        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class RoleRepositoryTest {
-
-    @Container
-    @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
 
     @Autowired
     private RoleRepository roleRepository;
@@ -28,12 +30,6 @@ class RoleRepositoryTest {
     @Test
     @DisplayName("findByName should return role if exists")
     void findByName_ReturnsRole() {
-        if (roleRepository.findByName(RoleName.USER).isEmpty()) {
-            Role role = new Role();
-            role.setName(RoleName.USER);
-            roleRepository.save(role);
-        }
-
         Optional<Role> found = roleRepository.findByName(RoleName.USER);
 
         assertThat(found).isPresent();

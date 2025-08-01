@@ -3,43 +3,30 @@ package book.shop.spring.boot.intro.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import book.shop.spring.boot.intro.model.ShoppingCart;
-import book.shop.spring.boot.intro.model.User;
-import book.shop.spring.boot.intro.util.TestEntityFactory;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
+import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @DataJpaTest
 @Testcontainers
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Sql(scripts = "classpath:database/schemas/shopping-carts-schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:database/shopping-carts/add-shopping-carts.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:database/shopping-carts/clear-shopping-carts.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class ShoppingCartRepositoryTest {
-
-    @Container
-    @ServiceConnection
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
 
     @Autowired
     private ShoppingCartRepository cartRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
     @Test
     @DisplayName("findByUserId should return cart for user")
     void findByUserId_ReturnsCart() {
-        User user = TestEntityFactory.createTestUser("test@cart.com");
-        userRepository.save(user);
-
-        ShoppingCart cart = new ShoppingCart();
-        cart.setUser(user);
-        cartRepository.save(cart);
-
-        Optional<ShoppingCart> result = cartRepository.findByUserId(user.getId());
+        Optional<ShoppingCart> result = cartRepository.findByUserId(1L);
 
         assertThat(result).isPresent();
         assertThat(result.get().getUser().getEmail()).isEqualTo("test@cart.com");
@@ -48,14 +35,7 @@ class ShoppingCartRepositoryTest {
     @Test
     @DisplayName("existsByUserId should return true if cart exists")
     void existsByUserId_ReturnsTrue() {
-        User user = TestEntityFactory.createTestUser("test2@cart.com");
-        userRepository.save(user);
-
-        ShoppingCart cart = new ShoppingCart();
-        cart.setUser(user);
-        cartRepository.save(cart);
-
-        boolean exists = cartRepository.existsByUserId(user.getId());
+        boolean exists = cartRepository.existsByUserId(2L);
 
         assertThat(exists).isTrue();
     }
