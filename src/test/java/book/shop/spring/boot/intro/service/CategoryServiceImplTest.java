@@ -2,7 +2,6 @@ package book.shop.spring.boot.intro.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,165 +11,176 @@ import book.shop.spring.boot.intro.exception.EntityNotFoundException;
 import book.shop.spring.boot.intro.mapper.CategoryMapper;
 import book.shop.spring.boot.intro.model.Category;
 import book.shop.spring.boot.intro.repository.CategoryRepository;
+import book.shop.spring.boot.intro.util.TestEntityFactory;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+@ExtendWith(SpringExtension.class)
 class CategoryServiceImplTest {
 
+    @Mock
     private CategoryRepository categoryRepository;
-    private CategoryMapper categoryMapper;
-    private CategoryServiceImpl categoryService;
 
-    @BeforeEach
-    void setUp() {
-        categoryRepository = mock(CategoryRepository.class);
-        categoryMapper = mock(CategoryMapper.class);
-        categoryService = new CategoryServiceImpl(categoryRepository, categoryMapper);
-    }
+    @Mock
+    private CategoryMapper categoryMapper;
+
+    @InjectMocks
+    private CategoryServiceImpl categoryService;
 
     @Test
     @DisplayName("Get all categories returns list of DTOs")
     void findAll_ReturnsListOfDtos() {
-        Category category1 = new Category();
-        category1.setId(1L);
-        category1.setName("Fiction");
+        Category fictionCategory = TestEntityFactory.createCategory(1L,
+                "Fiction", "Books about imagination");
+        Category scienceCategory = TestEntityFactory.createCategory(2L,
+                "Science", "Scientific topics");
 
-        Category category2 = new Category();
-        category2.setId(2L);
-        category2.setName("Science");
+        when(categoryRepository.findAll()).thenReturn(List.of(fictionCategory, scienceCategory));
 
-        when(categoryRepository.findAll()).thenReturn(List.of(category1, category2));
+        CategoryResponseDto fictionDto = new CategoryResponseDto(1L,
+                "Fiction", "Books about imagination");
+        CategoryResponseDto scienceDto = new CategoryResponseDto(2L,
+                "Science", "Scientific topics");
 
-        CategoryResponseDto dto1 = new CategoryResponseDto(1L, "Fiction", null);
-        CategoryResponseDto dto2 = new CategoryResponseDto(2L, "Science", null);
-
-        when(categoryMapper.toResponseDto(category1)).thenReturn(dto1);
-        when(categoryMapper.toResponseDto(category2)).thenReturn(dto2);
+        when(categoryMapper.toResponseDto(fictionCategory)).thenReturn(fictionDto);
+        when(categoryMapper.toResponseDto(scienceCategory)).thenReturn(scienceDto);
 
         List<CategoryResponseDto> result = categoryService.findAll();
 
-        assertThat(result).containsExactly(dto1, dto2);
+        assertThat(result).containsExactly(fictionDto, scienceDto);
+        verify(categoryRepository).findAll();
+        verify(categoryMapper).toResponseDto(fictionCategory);
+        verify(categoryMapper).toResponseDto(scienceCategory);
     }
 
     @Test
     @DisplayName("Get category by ID - returns DTO")
     void getById_ValidId_ReturnsDto() {
-        Long id = 1L;
-        Category category = new Category();
-        category.setId(id);
-        category.setName("Fiction");
+        Long categoryId = 1L;
+        Category category = TestEntityFactory.createCategory(categoryId, "Fiction",
+                "Books about imagination");
+        CategoryResponseDto expectedDto = new CategoryResponseDto(categoryId, "Fiction",
+                "Books about imagination");
 
-        when(categoryRepository.findById(id)).thenReturn(Optional.of(category));
-
-        CategoryResponseDto expectedDto = new CategoryResponseDto(id,
-                "Fiction", null);
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         when(categoryMapper.toResponseDto(category)).thenReturn(expectedDto);
 
-        CategoryResponseDto result = categoryService.getById(id);
+        CategoryResponseDto result = categoryService.getById(categoryId);
 
         assertThat(result).isEqualTo(expectedDto);
+        verify(categoryRepository).findById(categoryId);
+        verify(categoryMapper).toResponseDto(category);
     }
 
     @Test
     @DisplayName("Get category by ID - throws if not found")
     void getById_InvalidId_ThrowsException() {
-        Long id = 42L;
-        when(categoryRepository.findById(id)).thenReturn(Optional.empty());
+        Long nonExistentId = 42L;
+        when(categoryRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> categoryService.getById(id))
+        assertThatThrownBy(() -> categoryService.getById(nonExistentId))
                 .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Category not found by id: " + id);
+                .hasMessage("Category not found by id: " + nonExistentId);
+
+        verify(categoryRepository).findById(nonExistentId);
     }
 
     @Test
     @DisplayName("Save category - returns DTO")
     void save_ValidDto_ReturnsDto() {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy",
+        CreateCategoryRequestDto requestDto = new CreateCategoryRequestDto("Fantasy",
                 "Magic books");
+        Category unsavedCategory = new Category();
+        unsavedCategory.setName("Fantasy");
+        unsavedCategory.setDescription("Magic books");
 
-        Category category = new Category();
-        category.setName("Fantasy");
-        category.setDescription("Magic books");
-
-        Category savedCategory = new Category();
-        savedCategory.setId(1L);
-        savedCategory.setName("Fantasy");
-
+        Category savedCategory = TestEntityFactory.createCategory(1L, "Fantasy",
+                "Magic books");
         CategoryResponseDto expectedDto = new CategoryResponseDto(1L, "Fantasy",
                 "Magic books");
 
-        when(categoryMapper.toEntity(request)).thenReturn(category);
-        when(categoryRepository.save(category)).thenReturn(savedCategory);
+        when(categoryMapper.toEntity(requestDto)).thenReturn(unsavedCategory);
+        when(categoryRepository.save(unsavedCategory)).thenReturn(savedCategory);
         when(categoryMapper.toResponseDto(savedCategory)).thenReturn(expectedDto);
 
-        CategoryResponseDto result = categoryService.save(request);
+        CategoryResponseDto result = categoryService.save(requestDto);
 
         assertThat(result).isEqualTo(expectedDto);
+        verify(categoryMapper).toEntity(requestDto);
+        verify(categoryRepository).save(unsavedCategory);
+        verify(categoryMapper).toResponseDto(savedCategory);
     }
 
     @Test
     @DisplayName("Update category - success")
     void update_ValidId_ReturnsDto() {
-        Long id = 1L;
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy",
-                "Updated desc");
+        Long categoryId = 1L;
+        CreateCategoryRequestDto updateRequest = new CreateCategoryRequestDto("Fantasy",
+                "Updated description");
 
-        Category existing = new Category();
-        existing.setId(id);
-        existing.setName("Old name");
+        Category existingCategory = TestEntityFactory.createCategory(categoryId, "Old name",
+                "Old description");
+        Category updatedCategory = TestEntityFactory.createCategory(categoryId, "Fantasy",
+                "Updated description");
+        CategoryResponseDto expectedDto = new CategoryResponseDto(categoryId, "Fantasy",
+                "Updated description");
 
-        Category saved = new Category();
-        saved.setId(id);
-        saved.setName("Fantasy");
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository.save(existingCategory)).thenReturn(updatedCategory);
+        when(categoryMapper.toResponseDto(updatedCategory)).thenReturn(expectedDto);
 
-        CategoryResponseDto expectedDto = new CategoryResponseDto(id, "Fantasy",
-                "Updated desc");
-
-        when(categoryRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(categoryRepository.save(existing)).thenReturn(saved);
-        when(categoryMapper.toResponseDto(saved)).thenReturn(expectedDto);
-
-        CategoryResponseDto result = categoryService.update(id, request);
+        CategoryResponseDto result = categoryService.update(categoryId, updateRequest);
 
         assertThat(result).isEqualTo(expectedDto);
+        verify(categoryRepository).findById(categoryId);
+        verify(categoryRepository).save(existingCategory);
+        verify(categoryMapper).toResponseDto(updatedCategory);
     }
 
     @Test
     @DisplayName("Update category - throws if not found")
     void update_InvalidId_ThrowsException() {
-        Long id = 1L;
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Any",
+        Long nonExistentId = 1L;
+        CreateCategoryRequestDto updateRequest = new CreateCategoryRequestDto("Any",
                 "Desc");
 
-        when(categoryRepository.findById(id)).thenReturn(Optional.empty());
+        when(categoryRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> categoryService.update(id, request))
+        assertThatThrownBy(() -> categoryService.update(nonExistentId, updateRequest))
                 .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Category not found with id: " + id);
+                .hasMessage("Category not found with id: " + nonExistentId);
+
+        verify(categoryRepository).findById(nonExistentId);
     }
 
     @Test
     @DisplayName("Delete category - success")
     void deleteById_ValidId_Deletes() {
-        Long id = 1L;
-        when(categoryRepository.existsById(id)).thenReturn(true);
+        Long categoryId = 1L;
+        when(categoryRepository.existsById(categoryId)).thenReturn(true);
 
-        categoryService.deleteById(id);
+        categoryService.deleteById(categoryId);
 
-        verify(categoryRepository).deleteById(id);
+        verify(categoryRepository).existsById(categoryId);
+        verify(categoryRepository).deleteById(categoryId);
     }
 
     @Test
     @DisplayName("Delete category - throws if not found")
     void deleteById_InvalidId_ThrowsException() {
-        Long id = 42L;
-        when(categoryRepository.existsById(id)).thenReturn(false);
+        Long nonExistentId = 42L;
+        when(categoryRepository.existsById(nonExistentId)).thenReturn(false);
 
-        assertThatThrownBy(() -> categoryService.deleteById(id))
+        assertThatThrownBy(() -> categoryService.deleteById(nonExistentId))
                 .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Category not found with id: " + id);
+                .hasMessage("Category not found with id: " + nonExistentId);
+
+        verify(categoryRepository).existsById(nonExistentId);
     }
 }

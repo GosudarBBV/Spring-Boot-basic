@@ -15,9 +15,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Sql(scripts = "classpath:database/schemas/shopping-carts-schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(scripts = "classpath:database/shopping-carts/add-shopping-carts.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(scripts = "classpath:database/shopping-carts/clear-shopping-carts.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+@Sql(scripts = "classpath:database/schemas/shopping-carts-schema.sql",
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:database/shopping-carts/add-shopping-carts.sql",
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:database/shopping-carts/clear-shopping-carts.sql",
+        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class ShoppingCartRepositoryTest {
 
     @Autowired

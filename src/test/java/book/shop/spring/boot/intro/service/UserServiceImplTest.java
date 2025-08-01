@@ -1,11 +1,9 @@
 package book.shop.spring.boot.intro.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,34 +20,38 @@ import book.shop.spring.boot.intro.repository.RoleRepository;
 import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
 import book.shop.spring.boot.intro.repository.UserRepository;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+@ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
+    @Mock
     private UserRepository userRepository;
-    private UserMapper userMapper;
-    private PasswordEncoder passwordEncoder;
-    private RoleRepository roleRepository;
-    private ShoppingCartRepository shoppingCartRepository;
-    private UserServiceImpl userService;
 
-    @BeforeEach
-    void setUp() {
-        userRepository = mock(UserRepository.class);
-        userMapper = mock(UserMapper.class);
-        passwordEncoder = mock(PasswordEncoder.class);
-        roleRepository = mock(RoleRepository.class);
-        shoppingCartRepository = mock(ShoppingCartRepository.class);
-        userService = new UserServiceImpl(userRepository, userMapper, passwordEncoder,
-                roleRepository, shoppingCartRepository);
-    }
+    @Mock
+    private UserMapper userMapper;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
+    private ShoppingCartRepository shoppingCartRepository;
+
+    @InjectMocks
+    private UserServiceImpl userService;
 
     @Test
     @DisplayName("Register user successfully")
@@ -95,7 +97,7 @@ class UserServiceImplTest {
 
         UserResponseDto actualResponse = userService.register(requestDto);
 
-        assertEquals(expectedResponse, actualResponse);
+        assertThat(actualResponse).isEqualTo(expectedResponse);
         verify(shoppingCartRepository).save(any(ShoppingCart.class));
     }
 
@@ -107,7 +109,9 @@ class UserServiceImplTest {
 
         when(userRepository.existsByEmail(requestDto.getEmail())).thenReturn(true);
 
-        assertThrows(RegistrationException.class, () -> userService.register(requestDto));
+        assertThatThrownBy(() -> userService.register(requestDto))
+                .isInstanceOf(RegistrationException.class)
+                .hasMessageContaining("User already exists with email: existing@example.com");
     }
 
     @Test
@@ -126,7 +130,9 @@ class UserServiceImplTest {
         when(passwordEncoder.encode(anyString())).thenReturn("encoded123");
         when(roleRepository.findByName(RoleName.USER)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> userService.register(requestDto));
+        assertThatThrownBy(() -> userService.register(requestDto))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Role with name USER not found");
     }
 
     @Test
@@ -142,16 +148,18 @@ class UserServiceImplTest {
         User user = new User();
         user.setId(42L);
 
-        Authentication authentication = mock(Authentication.class);
+        Authentication authentication = org.mockito.Mockito.mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn(user);
 
-        SecurityContext securityContext = mock(SecurityContext.class);
+        SecurityContext securityContext = org.mockito.Mockito.mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);
 
-        try (MockedStatic<SecurityContextHolder> contextHolder = mockStatic(SecurityContextHolder.class)) {
+        try (MockedStatic<SecurityContextHolder> contextHolder = org.mockito.Mockito.mockStatic(SecurityContextHolder.class)) {
             contextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+
             Long result = userService.getAuthenticatedUserId();
-            assertEquals(42L, result);
+
+            assertThat(result).isEqualTo(42L);
         }
     }
 
@@ -176,6 +184,8 @@ class UserServiceImplTest {
 
         when(shoppingCartRepository.existsByUserId(1L)).thenReturn(true);
 
-        assertThrows(IllegalStateException.class, () -> userService.createShoppingCart(user));
+        assertThatThrownBy(() -> userService.createShoppingCart(user))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Shopping cart already exists");
     }
 }
