@@ -2,7 +2,6 @@ package book.shop.spring.boot.intro.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import book.shop.spring.boot.intro.config.TestRepositoryConfig;
 import book.shop.spring.boot.intro.model.Book;
 import book.shop.spring.boot.intro.model.Category;
 import java.math.BigDecimal;
@@ -10,17 +9,14 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class brtOld {
