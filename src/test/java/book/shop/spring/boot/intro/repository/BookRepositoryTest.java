@@ -2,11 +2,7 @@ package book.shop.spring.boot.intro.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Set;
 import book.shop.spring.boot.intro.model.Book;
-import book.shop.spring.boot.intro.model.Category;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
