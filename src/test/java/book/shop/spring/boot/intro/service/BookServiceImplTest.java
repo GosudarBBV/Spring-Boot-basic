@@ -33,7 +33,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.jdbc.Sql;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
-
 class BookServiceImplTest {
 
     @Mock
