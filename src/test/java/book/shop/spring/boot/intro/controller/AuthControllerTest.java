@@ -16,14 +16,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
-class AuthControllerTest {
+class AuthControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -32,52 +31,54 @@ class AuthControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    @DisplayName("Registration returns user DTO")
+    @DisplayName("Registration should return user response DTO")
     void registerUser_ValidRequest_ReturnsUserResponse() throws Exception {
-        var request = new UserRegistrationRequestDto();
-        request.setEmail("test@example.com");
+        UserRegistrationRequestDto request = new UserRegistrationRequestDto();
+        request.setEmail("user1@example.com");
         request.setPassword("pass123");
         request.setRepeatPassword("pass123");
-        request.setFirstName("John");
-        request.setLastName("Doe");
-        request.setShippingAddress("Kyiv");
+        request.setFirstName("Ivan");
+        request.setLastName("Petrenko");
+        request.setShippingAddress("Lviv");
 
         mockMvc.perform(post("/auth/registration")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.firstName").value("John"))
-                .andExpect(jsonPath("$.lastName").value("Doe"))
-                .andExpect(jsonPath("$.shippingAddress").value("Kyiv"));
+                .andExpect(jsonPath("$.email").value("user1@example.com"))
+                .andExpect(jsonPath("$.firstName").value("Ivan"))
+                .andExpect(jsonPath("$.lastName").value("Petrenko"))
+                .andExpect(jsonPath("$.shippingAddress").value("Lviv"));
     }
 
     @Test
-    @DisplayName("Login with valid credentials returns token")
+    @DisplayName("Login with valid credentials should return JWT token")
     void login_ValidCredentials_ReturnsToken() throws Exception {
-        // Спочатку реєструємо користувача
-        UserRegistrationRequestDto registration = new UserRegistrationRequestDto();
-        registration.setEmail("loginuser@example.com");
-        registration.setPassword("pass123");
-        registration.setRepeatPassword("pass123");
-        registration.setFirstName("Jane");
-        registration.setLastName("Smith");
-        registration.setShippingAddress("Lviv");
+
+        UserRegistrationRequestDto registrationRequest = new UserRegistrationRequestDto();
+        registrationRequest.setEmail("user2@example.com");
+        registrationRequest.setPassword("pass123");
+        registrationRequest.setRepeatPassword("pass123");
+        registrationRequest.setFirstName("Olga");
+        registrationRequest.setLastName("Kovalchuk");
+        registrationRequest.setShippingAddress("Kyiv");
 
         mockMvc.perform(post("/auth/registration")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registration)))
+                        .content(objectMapper.writeValueAsString(registrationRequest)))
                 .andExpect(status().isOk());
 
         // Логін
-        UserLoginRequestDto login = new UserLoginRequestDto("loginuser@example.com", "pass123");
+        UserLoginRequestDto loginRequest = new UserLoginRequestDto(
+                "user2@example.com", "pass123"
+        );
 
         mockMvc.perform(post("/auth/login")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(login)))
+                        .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty());
     }
