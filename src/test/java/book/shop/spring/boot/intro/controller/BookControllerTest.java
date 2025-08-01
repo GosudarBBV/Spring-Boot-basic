@@ -66,7 +66,7 @@ class BookControllerTest {
     @Test
     @DisplayName("Get book by id - success")
     void findById_ValidId_ReturnsBook() throws Exception {
-        // Спочатку створимо книгу через API (або setup у базі)
+        // Створюємо книгу
         var createRequest = new CreateBookRequestDto(
                 "1984",
                 "George Orwell",
@@ -77,7 +77,6 @@ class BookControllerTest {
                 List.of()
         );
 
-        // Створюємо книгу, зберігаємо id
         var createResult = mockMvc.perform(post("/books")
                         .with(csrf())
                         .with(user("admin").roles("ADMIN"))
@@ -86,10 +85,9 @@ class BookControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        var responseBody = createResult.getResponse().getContentAsString();
-        var createdBook = objectMapper.readTree(responseBody);
-        long bookId = createdBook.get("id").asLong();
+        long bookId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
 
+        // Читаємо книгу
         mockMvc.perform(get("/books/{id}", bookId)
                         .with(csrf())
                         .with(user("user").roles("USER")))
