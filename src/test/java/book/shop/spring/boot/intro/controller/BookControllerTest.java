@@ -53,7 +53,6 @@ class BookControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        // Парсимо просто через ObjectMapper в Map або читаємо поле id напряму
         return objectMapper.readTree(responseContent).get("id").asLong();
     }
 
