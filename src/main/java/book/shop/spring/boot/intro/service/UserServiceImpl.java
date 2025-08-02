@@ -44,9 +44,10 @@ public class UserServiceImpl implements UserService {
                         "Role with name " + RoleName.USER + " not found"));
 
         user.setRoles(Set.of(userRole));
+        User savedUser = userRepository.save(user);
         createShoppingCart(user);
 
-        return userMapper.toResponseDto(userRepository.save(user));
+        return userMapper.toResponseDto(savedUser);
     }
 
     @Override
