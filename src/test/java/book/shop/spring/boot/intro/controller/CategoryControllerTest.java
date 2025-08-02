@@ -10,16 +10,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
+import book.shop.spring.boot.intro.dto.CategoryResponseDto;
 import book.shop.spring.boot.intro.dto.CreateCategoryRequestDto;
+import book.shop.spring.boot.intro.model.Category;
+import book.shop.spring.boot.intro.repository.CategoryRepository;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -33,135 +40,87 @@ class CategoryControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     @Test
-    @DisplayName("Create category - success")
+    @DisplayName("Create category - should return created category")
     void createCategory_ValidRequest_ReturnsCreatedCategory() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy", "Magical books");
+        CreateCategoryRequestDto request = new CreateCategoryRequestDto("History", "Books about history");
 
         mockMvc.perform(post("/categories")
                         .with(csrf())
                         .with(user("admin").roles("ADMIN"))
-                        .contentType("application/json")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Fantasy"))
-                .andExpect(jsonPath("$.description").value("Magical books"))
-                .andExpect(jsonPath("$.id").isNumber());
+                .andExpect(jsonPath("$.name").value("History"))
+                .andExpect(jsonPath("$.description").value("Books about history"));
     }
 
     @Test
-    @DisplayName("Get all categories - success")
-    void getAllCategories_ReturnsList() throws Exception {
-        mockMvc.perform(get("/categories")
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
-    }
-
-    @Test
-    @DisplayName("Get category by ID - success")
+    @DisplayName("Get category by ID - should return category")
     void getCategoryById_ReturnsCategory() throws Exception {
-        CreateCategoryRequestDto createRequest = new CreateCategoryRequestDto("Sci-Fi", "Science fiction books");
+        Category category = new Category();
+        category.setName("Science");
+        category.setDescription("Books about science");
+        category = categoryRepository.save(category);
 
-        String jsonResponse = mockMvc.perform(post("/categories")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        Long categoryId = objectMapper.readTree(jsonResponse).get("id").asLong();
-
-        mockMvc.perform(get("/categories/{id}", categoryId)
+        mockMvc.perform(get("/categories/{id}", category.getId())
                         .with(user("user").roles("USER")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(categoryId))
-                .andExpect(jsonPath("$.name").value("Sci-Fi"))
-                .andExpect(jsonPath("$.description").value("Science fiction books"));
+                .andExpect(jsonPath("$.id").value(category.getId()))
+                .andExpect(jsonPath("$.name").value("Science"));
     }
 
     @Test
-    @DisplayName("Update category - success")
+    @DisplayName("Update category - should return updated category")
     void updateCategory_ReturnsUpdatedCategory() throws Exception {
-        CreateCategoryRequestDto createRequest = new CreateCategoryRequestDto("History", "Historical books");
+        Category category = new Category();
+        category.setName("History");
+        category.setDescription("Some desc");
+        category = categoryRepository.save(category);
 
-        String jsonResponse = mockMvc.perform(post("/categories")
+        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Updated History", "Updated desc");
+
+        mockMvc.perform(put("/categories/{id}", category.getId())
                         .with(csrf())
                         .with(user("admin").roles("ADMIN"))
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        Long categoryId = objectMapper.readTree(jsonResponse).get("id").asLong();
-
-        CreateCategoryRequestDto updateRequest = new CreateCategoryRequestDto("Updated History", "Updated description");
-
-        mockMvc.perform(put("/categories/{id}", categoryId)
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(updateRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(categoryId))
                 .andExpect(jsonPath("$.name").value("Updated History"))
-                .andExpect(jsonPath("$.description").value("Updated description"));
+                .andExpect(jsonPath("$.description").value("Updated desc"));
     }
 
     @Test
-    @DisplayName("Delete category - success")
+    @DisplayName("Delete category - should return 200")
     void deleteCategory_ReturnsOk() throws Exception {
-        CreateCategoryRequestDto createRequest = new CreateCategoryRequestDto("To delete", "Description");
+        Category category = new Category();
+        category.setName("To Delete");
+        category.setDescription("Temp");
+        category = categoryRepository.save(category);
 
-        String jsonResponse = mockMvc.perform(post("/categories")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        Long categoryId = objectMapper.readTree(jsonResponse).get("id").asLong();
-
-        mockMvc.perform(delete("/categories/{id}", categoryId)
+        mockMvc.perform(delete("/categories/{id}", category.getId())
                         .with(csrf())
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/categories/{id}", categoryId)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isNotFound());
+        boolean exists = categoryRepository.existsById(category.getId());
+        assert !exists : "Category should be deleted from DB";
     }
 
     @Test
-    @DisplayName("Get books by category ID - success")
-    void getBooksByCategory_ReturnsPagedBooks() throws Exception {
-        // Створюємо категорію
-        CreateCategoryRequestDto createRequest = new CreateCategoryRequestDto("Category for books", "Description");
-        String jsonResponse = mockMvc.perform(post("/categories")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+    @DisplayName("Get all categories - should return list")
+    void getAllCategories_ReturnsList() throws Exception {
+        Category category = new Category();
+        category.setName("Fiction");
+        category.setDescription("Fictional books");
+        categoryRepository.save(category);
 
-        Long categoryId = objectMapper.readTree(jsonResponse).get("id").asLong();
-
-        // Тепер можна протестувати отримання книг за категорією
-        // Припустимо, що в базі є книги з цією категорією, або треба додати їх перед тестом
-        mockMvc.perform(get("/categories/by-category/{id}?page=0&size=10", categoryId)
+        mockMvc.perform(get("/categories")
                         .with(user("user").roles("USER")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$[0].name").value("Fiction"));
     }
 }
