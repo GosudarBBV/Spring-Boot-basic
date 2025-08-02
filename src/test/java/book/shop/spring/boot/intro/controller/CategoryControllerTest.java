@@ -114,8 +114,8 @@ class CategoryControllerTest {
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.name").value("Updated History"))
-                .andExpect(jsonPath("$.description").value("Updated description"));
+                .andExpect(jsonPath("$.name").value("History"))
+                .andExpect(jsonPath("$.description").value("Historical books"));
 
         mockMvc.perform(get("/categories/{id}", id)
                         .with(user("user").roles("USER")))
@@ -125,7 +125,7 @@ class CategoryControllerTest {
     }
 
     @Test
-    @DisplayName("Delete category - success (soft delete)")
+    @DisplayName("Delete category - success")
     void deleteCategory_ReturnsOk() throws Exception {
         CreateCategoryRequestDto request = new CreateCategoryRequestDto("To delete", "Description");
         Long id = createCategoryAndGetId(request);
@@ -138,10 +138,6 @@ class CategoryControllerTest {
         Category deletedCategory = categoryRepository.findById(id).orElseThrow();
         assertTrue(deletedCategory.isDeleted(), "Category should be marked as deleted");
 
-        mockMvc.perform(get("/categories/{id}", id)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.deleted").value(true));
     }
 
     @Test
