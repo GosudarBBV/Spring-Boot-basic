@@ -40,7 +40,6 @@ class CategoryControllerTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    // Втягую створення категорії в окремий метод для зручності
     private Long createCategoryAndGetId(CreateCategoryRequestDto request) throws Exception {
         String response = mockMvc.perform(post("/categories")
                         .with(csrf())
@@ -75,7 +74,6 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Get all categories - returns array")
     void getAllCategories_ReturnsList() throws Exception {
-        // Створюємо категорію, щоб масив не був пустим
         createCategoryAndGetId(new CreateCategoryRequestDto("Sample", "Sample description"));
 
         mockMvc.perform(get("/categories")

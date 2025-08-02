@@ -7,14 +7,13 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Primary;
 
-
 @Profile("test")
 @Primary
 @Service
 public class FakeAuthenticationService extends AuthenticationService {
 
     public FakeAuthenticationService() {
-        super(null, null); // Бо в тесті вони не потрібні
+        super(null, null);
     }
 
     @Override

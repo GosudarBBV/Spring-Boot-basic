@@ -50,7 +50,8 @@ class BookServiceImplTest {
     void save_WithValidDataAndNonDeletedCategories_ReturnsSavedBookDto() {
         CreateBookRequestDto requestDto = new CreateBookRequestDto(
                 "Effective Java", "Joshua Bloch", "1234567890123",
-                new BigDecimal("49.99"), "Best practices", "java.jpg", List.of(1L, 2L)
+                new BigDecimal("49.99"), "Best practices",
+                "java.jpg", List.of(1L, 2L)
         );
 
         Book unsavedBook = new Book();
@@ -184,14 +185,16 @@ class BookServiceImplTest {
         Pageable pageable = Pageable.ofSize(5);
         Book bookEntity = new Book();
         BookDtoWithoutCategoryIds bookDto = new BookDtoWithoutCategoryIds(
-                1L, "Clean Code", "Robert C. Martin", BigDecimal.valueOf(30), "Great book"
+                1L, "Clean Code", "Robert C. Martin",
+                BigDecimal.valueOf(30), "Great book"
         );
         Page<Book> bookPage = new PageImpl<>(List.of(bookEntity));
 
         when(bookRepository.findAllByCategoriesId(categoryId, pageable)).thenReturn(bookPage);
         when(bookMapper.toDtoWithoutCategories(bookEntity)).thenReturn(bookDto);
 
-        Page<BookDtoWithoutCategoryIds> result = bookService.findAllByCategoryId(categoryId, pageable);
+        Page<BookDtoWithoutCategoryIds> result = bookService
+                .findAllByCategoryId(categoryId, pageable);
 
         assertThat(result.getContent()).containsExactly(bookDto);
         verify(bookRepository).findAllByCategoriesId(categoryId, pageable);

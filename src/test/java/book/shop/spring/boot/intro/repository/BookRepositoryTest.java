@@ -16,7 +16,8 @@ import org.springframework.test.context.jdbc.Sql;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DisplayName("Find books by existed category id")
-@Sql(scripts = "classpath:database/schemas/books.schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:database/schemas/books.schema.sql",
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = {
         "classpath:database/books/add-books-to-table.sql",
         "classpath:database/categories/add-categories-to-table.sql",
@@ -37,7 +38,8 @@ public class BookRepositoryTest {
     void findAllByCategoryId_ExistedId_Success() {
         Long categoryId = 1L;
 
-        Page<Book> result = bookRepository.findAllByCategoriesId(categoryId, PageRequest.of(0, 10));
+        Page<Book> result = bookRepository.findAllByCategoriesId(categoryId,
+                PageRequest.of(0, 10));
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(2);
@@ -52,7 +54,8 @@ public class BookRepositoryTest {
     void findAllByCategoryId_InvalidId_ReturnsEmptyPage() {
         Long invalidCategoryId = 999L;
 
-        Page<Book> result = bookRepository.findAllByCategoriesId(invalidCategoryId, PageRequest.of(0, 10));
+        Page<Book> result = bookRepository.findAllByCategoriesId(invalidCategoryId,
+                PageRequest.of(0, 10));
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isEmpty();

@@ -50,35 +50,10 @@ public class TestEntityFactory {
         return book;
     }
 
-    public static CartItem createCartItem(Book book, int quantity) {
-        CartItem cartItem = new CartItem();
-        cartItem.setBook(book);
-        cartItem.setQuantity(quantity);
-        return cartItem;
-    }
-
     public static ShoppingCart createCart(User user, Set<CartItem> items) {
         ShoppingCart cart = new ShoppingCart();
         cart.setUser(user);
         cart.setCartItems(items != null ? items : new HashSet<>());
         return cart;
-    }
-
-    public static Order createOrder(User user, String shippingAddress, BigDecimal total, OrderStatus status) {
-        Order order = new Order();
-        order.setUser(user);
-        order.setShippingAddress(shippingAddress);
-        order.setOrderDate(LocalDateTime.now());
-        order.setTotal(total);
-        order.setStatus(status);
-        return order;
-    }
-
-    public static OrderItem createOrderItem(Order order, Book book, int quantity) {
-        OrderItem orderItem = new OrderItem();
-        orderItem.setOrder(order);
-        orderItem.setBook(book);
-        orderItem.setQuantity(quantity);
-        return orderItem;
     }
 }

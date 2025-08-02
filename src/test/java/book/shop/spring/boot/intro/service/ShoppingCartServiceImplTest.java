@@ -100,7 +100,8 @@ class ShoppingCartServiceImplTest {
         Long userId = 1L;
         Long bookId = 1L;
 
-        ShoppingCart existingCart = TestEntityFactory.createCart(TestEntityFactory.createTestUser(), new HashSet<>());
+        ShoppingCart existingCart = TestEntityFactory
+                .createCart(TestEntityFactory.createTestUser(), new HashSet<>());
 
         when(shoppingCartRepository.findByUserId(userId))
                 .thenReturn(Optional.of(existingCart));
@@ -130,7 +131,8 @@ class ShoppingCartServiceImplTest {
                 List.of()
         );
 
-        when(shoppingCartRepository.findByUserId(userId)).thenReturn(Optional.of(existingCart));
+        when(shoppingCartRepository.findByUserId(userId))
+                .thenReturn(Optional.of(existingCart));
         when(shoppingCartMapper.toDto(existingCart)).thenReturn(expectedResponseDto);
 
         ShoppingCartResponseDto actualResponseDto = shoppingCartService.getCartByUser(userId);
@@ -163,7 +165,8 @@ class ShoppingCartServiceImplTest {
                 List.of()
         );
 
-        when(shoppingCartRepository.findByUserId(userId)).thenReturn(Optional.of(existingCart));
+        when(shoppingCartRepository.findByUserId(userId))
+                .thenReturn(Optional.of(existingCart));
         when(cartItemRepository.findByIdAndShoppingCartId(cartItemId,
                 existingCart.getId()))
                 .thenReturn(Optional.of(existingCartItem));
@@ -195,7 +198,8 @@ class ShoppingCartServiceImplTest {
         CartItem existingCartItem = new CartItem();
         existingCartItem.setId(cartItemId);
 
-        when(shoppingCartRepository.findByUserId(userId)).thenReturn(Optional.of(existingCart));
+        when(shoppingCartRepository.findByUserId(userId))
+                .thenReturn(Optional.of(existingCart));
         when(cartItemRepository.findByIdAndShoppingCartId(cartItemId, existingCart.getId()))
                 .thenReturn(Optional.of(existingCartItem));
 
@@ -212,7 +216,8 @@ class ShoppingCartServiceImplTest {
         Long userId = 1L;
         Long cartItemId = 1L;
 
-        ShoppingCart existingCart = TestEntityFactory.createCart(TestEntityFactory.createTestUser(), new HashSet<>());
+        ShoppingCart existingCart = TestEntityFactory
+                .createCart(TestEntityFactory.createTestUser(), new HashSet<>());
         existingCart.setId(10L);
 
         when(shoppingCartRepository.findByUserId(userId)).thenReturn(Optional.of(existingCart));

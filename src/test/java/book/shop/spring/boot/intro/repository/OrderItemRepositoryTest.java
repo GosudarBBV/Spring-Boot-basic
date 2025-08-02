@@ -38,7 +38,8 @@ class OrderItemRepositoryTest {
     @Test
     @DisplayName("findByIdAndOrderIdAndOrderUserId should return correct item")
     void findByIdAndOrderIdAndUserId_ReturnsItem() {
-        Optional<OrderItem> result = orderItemRepository.findByIdAndOrderIdAndOrderUserId(1L, 1L, 1L);
+        Optional<OrderItem> result = orderItemRepository
+                .findByIdAndOrderIdAndOrderUserId(1L, 1L, 1L);
 
         assertThat(result).isPresent();
         assertThat(result.get().getQuantity()).isEqualTo(2);

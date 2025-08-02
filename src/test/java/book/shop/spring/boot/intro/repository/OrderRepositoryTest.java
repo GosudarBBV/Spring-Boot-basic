@@ -29,7 +29,8 @@ class OrderRepositoryTest {
     @Test
     @DisplayName("findAllByUserId should return all orders for user")
     void findAllByUserId_ShouldReturnOrders() {
-        Page<Order> orders = orderRepository.findAllByUserId(1L, PageRequest.of(0, 10));
+        Page<Order> orders = orderRepository.findAllByUserId(1L,
+                PageRequest.of(0, 10));
 
         assertThat(orders).hasSize(2);
         assertThat(orders.getContent())
@@ -40,7 +41,8 @@ class OrderRepositoryTest {
     @Test
     @DisplayName("findByIdAndUserId should return correct order")
     void findByIdAndUserId_ShouldReturnOrder() {
-        Optional<Order> result = orderRepository.findByIdAndUserId(3L, 2L);
+        Optional<Order> result = orderRepository
+                .findByIdAndUserId(3L, 2L);
 
         assertThat(result).isPresent();
         assertThat(result.get().getUser().getId()).isEqualTo(2L);
@@ -49,7 +51,8 @@ class OrderRepositoryTest {
     @Test
     @DisplayName("findByIdAndUserId should return empty if user doesn't match")
     void findByIdAndUserId_ShouldReturnEmpty_WhenUserMismatch() {
-        Optional<Order> result = orderRepository.findByIdAndUserId(3L, 3L);
+        Optional<Order> result = orderRepository
+                .findByIdAndUserId(3L, 3L);
 
         assertThat(result).isEmpty();
     }

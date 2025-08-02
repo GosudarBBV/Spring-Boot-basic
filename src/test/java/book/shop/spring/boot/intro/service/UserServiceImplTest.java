@@ -154,7 +154,8 @@ class UserServiceImplTest {
         SecurityContext securityContext = org.mockito.Mockito.mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);
 
-        try (MockedStatic<SecurityContextHolder> contextHolder = org.mockito.Mockito.mockStatic(SecurityContextHolder.class)) {
+        try (MockedStatic<SecurityContextHolder> contextHolder = org.mockito.Mockito
+                .mockStatic(SecurityContextHolder.class)) {
             contextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
 
             Long result = userService.getAuthenticatedUserId();

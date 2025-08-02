@@ -94,8 +94,10 @@ class BookControllerTest {
                 .andExpect(jsonPath("$.id").value(bookId))
                 .andExpect(jsonPath("$.title").value("1984"))
                 .andExpect(jsonPath("$.author").value("George Orwell"))
-                .andExpect(jsonPath("$.description").value("Dystopian novel"))
-                .andExpect(jsonPath("$.coverImage").value("http://example.com/1984.jpg"));
+                .andExpect(jsonPath("$.description")
+                        .value("Dystopian novel"))
+                .andExpect(jsonPath("$.coverImage")
+                        .value("http://example.com/1984.jpg"));
     }
 
     @Test
@@ -125,8 +127,10 @@ class BookControllerTest {
                 .andExpect(jsonPath("$.id").value(bookId))
                 .andExpect(jsonPath("$.title").value("Updated Title"))
                 .andExpect(jsonPath("$.author").value("Updated Author"))
-                .andExpect(jsonPath("$.description").value("Updated Description"))
-                .andExpect(jsonPath("$.coverImage").value("http://example.com/updated.jpg"));
+                .andExpect(jsonPath("$.description")
+                        .value("Updated Description"))
+                .andExpect(jsonPath("$.coverImage")
+                        .value("http://example.com/updated.jpg"));
     }
 
     @Test

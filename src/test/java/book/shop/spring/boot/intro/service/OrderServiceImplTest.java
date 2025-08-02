@@ -208,7 +208,8 @@ class OrderServiceImplTest {
         Order order = new Order();
         order.setId(orderId);
 
-        OrderResponseDto updatedDto = new OrderResponseDto(orderId, 1L, List.of(), null, BigDecimal.ZERO, status);
+        OrderResponseDto updatedDto = new OrderResponseDto(orderId, 1L, List.of(),
+                null, BigDecimal.ZERO, status);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderMapper.toDto(order)).thenReturn(updatedDto);

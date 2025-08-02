@@ -63,9 +63,11 @@ class CategoryServiceImplTest {
     @DisplayName("Get category by ID - returns DTO")
     void getById_ValidId_ReturnsDto() {
         Long categoryId = 1L;
-        Category category = TestEntityFactory.createCategory(categoryId, "Fiction",
+        Category category = TestEntityFactory.createCategory(categoryId,
+                "Fiction",
                 "Books about imagination");
-        CategoryResponseDto expectedDto = new CategoryResponseDto(categoryId, "Fiction",
+        CategoryResponseDto expectedDto = new CategoryResponseDto(categoryId,
+                "Fiction",
                 "Books about imagination");
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
@@ -124,14 +126,18 @@ class CategoryServiceImplTest {
         CreateCategoryRequestDto updateRequest = new CreateCategoryRequestDto("Fantasy",
                 "Updated description");
 
-        Category existingCategory = TestEntityFactory.createCategory(categoryId, "Old name",
+        Category existingCategory = TestEntityFactory
+                .createCategory(categoryId, "Old name",
                 "Old description");
-        Category updatedCategory = TestEntityFactory.createCategory(categoryId, "Fantasy",
+        Category updatedCategory = TestEntityFactory
+                .createCategory(categoryId, "Fantasy",
                 "Updated description");
-        CategoryResponseDto expectedDto = new CategoryResponseDto(categoryId, "Fantasy",
+        CategoryResponseDto expectedDto = new CategoryResponseDto(categoryId,
+                "Fantasy",
                 "Updated description");
 
-        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository.findById(categoryId))
+                .thenReturn(Optional.of(existingCategory));
         when(categoryRepository.save(existingCategory)).thenReturn(updatedCategory);
         when(categoryMapper.toResponseDto(updatedCategory)).thenReturn(expectedDto);
 
