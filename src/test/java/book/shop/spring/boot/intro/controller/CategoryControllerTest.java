@@ -125,7 +125,7 @@ class CategoryControllerTest {
     }
 
     @Test
-    @DisplayName("Delete category - success")
+    @DisplayName("Delete category - success (soft delete)")
     void deleteCategory_ReturnsOk() throws Exception {
         CreateCategoryRequestDto request = new CreateCategoryRequestDto("To delete", "Description");
         Long id = createCategoryAndGetId(request);
@@ -135,12 +135,13 @@ class CategoryControllerTest {
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/categories/{id}", id)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isNotFound());
-
         Category deletedCategory = categoryRepository.findById(id).orElseThrow();
         assertTrue(deletedCategory.isDeleted(), "Category should be marked as deleted");
+
+        mockMvc.perform(get("/categories/{id}", id)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deleted").value(true));
     }
 
     @Test
