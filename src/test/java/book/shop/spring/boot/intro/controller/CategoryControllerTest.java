@@ -1,5 +1,6 @@
 package book.shop.spring.boot.intro.controller;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -11,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.CreateCategoryRequestDto;
+import book.shop.spring.boot.intro.model.Category;
+import book.shop.spring.boot.intro.repository.CategoryRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,9 @@ class CategoryControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     // Втягую створення категорії в окремий метод для зручності
     private Long createCategoryAndGetId(CreateCategoryRequestDto request) throws Exception {
@@ -110,6 +116,12 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.name").value("Updated History"))
                 .andExpect(jsonPath("$.description").value("Updated description"));
+
+        mockMvc.perform(get("/categories/{id}", id)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated History"))
+                .andExpect(jsonPath("$.description").value("Updated description"));
     }
 
     @Test
@@ -126,6 +138,9 @@ class CategoryControllerTest {
         mockMvc.perform(get("/categories/{id}", id)
                         .with(user("user").roles("USER")))
                 .andExpect(status().isNotFound());
+
+        Category deletedCategory = categoryRepository.findById(id).orElseThrow();
+        assertTrue(deletedCategory.isDeleted(), "Category should be marked as deleted");
     }
 
     @Test
