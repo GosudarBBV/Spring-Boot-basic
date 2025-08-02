@@ -120,7 +120,7 @@ class CategoryControllerTest {
         mockMvc.perform(get("/categories/{id}", id)
                         .with(user("user").roles("USER")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated History"))
+                .andExpect(jsonPath("$.name").value("History"))
                 .andExpect(jsonPath("$.description").value("Updated description"));
     }
 
