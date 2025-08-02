@@ -13,14 +13,17 @@ import book.shop.spring.boot.intro.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(UserController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 class UserControllerTest {
 
@@ -48,14 +51,14 @@ class UserControllerTest {
         verify(userService).deleteById(userId);
     }
 
-    @DisplayName("Given user with USER role, when DELETE /users/{id}, then status 403")
     @Test
+    @DisplayName("Given user with USER role, when DELETE /users/{id}, then status 403")
     void deleteById_UserRole_Forbidden() throws Exception {
         Long userId = 5L;
 
         mockMvc.perform(delete("/users/{id}", userId)
                         .with(csrf())
-                        .with(SecurityMockMvcRequestPostProcessors.user("user").roles("USER"))
+                        .with(user("user").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }

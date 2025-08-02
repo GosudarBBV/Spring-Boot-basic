@@ -1,7 +1,5 @@
 package book.shop.spring.boot.intro.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.OrderItemDto;
@@ -17,7 +17,6 @@ import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.OrderResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.model.OrderStatus;
-import book.shop.spring.boot.intro.security.JwtUtil;
 import book.shop.spring.boot.intro.service.OrderService;
 import book.shop.spring.boot.intro.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,21 +27,28 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(OrderController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class OrderControllerTest {
+class OrderControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockBean
     private OrderService orderService;
@@ -50,14 +56,8 @@ public class OrderControllerTest {
     @MockBean
     private UserService userService;
 
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
-    @DisplayName("POST /orders should return created OrderResponseDto")
+    @DisplayName("Create order - success")
     void placeOrder_ValidRequest_ReturnsCreatedOrder() throws Exception {
         OrderRequestDto requestDto = new OrderRequestDto("Kyiv");
         OrderResponseDto responseDto = new OrderResponseDto(
@@ -70,8 +70,7 @@ public class OrderControllerTest {
         );
 
         when(userService.getAuthenticatedUserId()).thenReturn(1L);
-        when(orderService.placeOrder(1L,
-                requestDto.shippingAddress())).thenReturn(responseDto);
+        when(orderService.placeOrder(1L, requestDto.shippingAddress())).thenReturn(responseDto);
 
         mockMvc.perform(post("/orders")
                         .with(csrf())
@@ -83,7 +82,7 @@ public class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("GET /orders should return paged OrderResponseDto list")
+    @DisplayName("Get order history - success")
     void getOrderHistory_ShouldReturnPage() throws Exception {
         OrderResponseDto order = new OrderResponseDto(
                 1L,
@@ -107,7 +106,7 @@ public class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("GET /orders/{orderId}/items should return order items")
+    @DisplayName("Get order items - success")
     void getItems_ShouldReturnItems() throws Exception {
         OrderItemDto item = new OrderItemDto(1L, 5L, 2);
 
@@ -123,7 +122,7 @@ public class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("GET /orders/{orderId}/items/{itemId} should return specific item")
+    @DisplayName("Get specific order item - success")
     void getItem_ShouldReturnSpecificItem() throws Exception {
         OrderItemDto item = new OrderItemDto(2L, 7L, 1);
 
@@ -139,7 +138,7 @@ public class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /orders/{id} should update status")
+    @DisplayName("Update order status - success")
     void updateStatus_ShouldUpdateStatus() throws Exception {
         UpdateOrderStatusRequestDto request = new UpdateOrderStatusRequestDto("PENDING");
         OrderResponseDto response = new OrderResponseDto(

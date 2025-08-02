@@ -1,14 +1,15 @@
 package book.shop.spring.boot.intro.controller;
 
-import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
@@ -23,14 +24,19 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(ShoppingCartController.class)
+
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 class ShoppingCartControllerTest {
 
@@ -68,7 +74,7 @@ class ShoppingCartControllerTest {
 
         mockMvc.perform(post("/cart")
                         .with(csrf())
-                        .with(SecurityMockMvcRequestPostProcessors.user("user").roles("USER"))
+                        .with(user("user").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -91,7 +97,7 @@ class ShoppingCartControllerTest {
         when(shoppingCartService.getCartByUser(userId)).thenReturn(response);
 
         mockMvc.perform(get("/cart")
-                        .with(SecurityMockMvcRequestPostProcessors.user("user").roles("USER")))
+                        .with(user("user").roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(response)));
     }
@@ -116,7 +122,7 @@ class ShoppingCartControllerTest {
 
         mockMvc.perform(put("/cart/items/{cartItemId}", cartItemId)
                         .with(csrf())
-                        .with(SecurityMockMvcRequestPostProcessors.user("user").roles("USER"))
+                        .with(user("user").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -133,7 +139,7 @@ class ShoppingCartControllerTest {
 
         mockMvc.perform(delete("/cart/items/{cartItemId}", cartItemId)
                         .with(csrf())
-                        .with(SecurityMockMvcRequestPostProcessors.user("user").roles("USER")))
+                        .with(user("user").roles("USER")))
                 .andExpect(status().isNoContent());
     }
 }

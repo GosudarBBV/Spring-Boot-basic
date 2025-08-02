@@ -10,6 +10,7 @@ import book.shop.spring.boot.intro.model.ShoppingCart;
 import book.shop.spring.boot.intro.model.User;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,6 +35,7 @@ public class TestEntityFactory {
         category.setId(id);
         category.setName(name);
         category.setDescription(description);
+        category.setDeleted(false); // soft-delete default
         return category;
     }
 
@@ -41,7 +43,10 @@ public class TestEntityFactory {
         Book book = new Book();
         book.setId(id);
         book.setTitle(title);
+        book.setAuthor("Author Name");
         book.setPrice(price);
+        book.setDescription("Description of the book");
+        book.setCoverImage("image.jpg");
         return book;
     }
 
@@ -63,6 +68,7 @@ public class TestEntityFactory {
         Order order = new Order();
         order.setUser(user);
         order.setShippingAddress(shippingAddress);
+        order.setOrderDate(LocalDateTime.now());
         order.setTotal(total);
         order.setStatus(status);
         return order;
