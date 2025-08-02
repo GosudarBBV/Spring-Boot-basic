@@ -121,7 +121,7 @@ class CategoryControllerTest {
                         .with(user("user").roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("History"))
-                .andExpect(jsonPath("$.description").value("Updated description"));
+                .andExpect(jsonPath("$.description").value("Historical books"));
     }
 
     @Test
