@@ -15,7 +15,6 @@ import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
 import book.shop.spring.boot.intro.model.Book;
 import book.shop.spring.boot.intro.repository.BookRepository;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,7 +26,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -35,7 +33,6 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 class BookControllerTest {
-
     @Autowired
     private MockMvc mockMvc;
 
@@ -45,18 +42,28 @@ class BookControllerTest {
     @Autowired
     private BookRepository bookRepository;
 
+    private Long createBookAndGetId(CreateBookRequestDto request) throws Exception {
+        String responseContent = mockMvc.perform(post("/books")
+                        .with(csrf())
+                        .with(user("admin").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        // Парсимо просто через ObjectMapper в Map або читаємо поле id напряму
+        return objectMapper.readTree(responseContent).get("id").asLong();
+    }
+
     @Test
     @DisplayName("Create book - success")
     void save_ValidRequest_ReturnsCreatedBook() throws Exception {
         CreateBookRequestDto request = new CreateBookRequestDto(
-                "The Hobbit",
-                "J.R.R. Tolkien",
-                "9783161484100",
-                BigDecimal.valueOf(19.99),
-                "A fantasy novel",
-                "http://example.com/cover.jpg",
-                List.of(1L, 2L)
-        );
+                "The Hobbit", "J.R.R. Tolkien", "9783161484100",
+                BigDecimal.valueOf(19.99), "A fantasy novel",
+                "http://example.com/cover.jpg", List.of(1L, 2L));
 
         mockMvc.perform(post("/books")
                         .with(csrf())
@@ -75,25 +82,11 @@ class BookControllerTest {
     @DisplayName("Get book by id - success")
     void findById_ValidId_ReturnsBook() throws Exception {
         CreateBookRequestDto createRequest = new CreateBookRequestDto(
-                "1984",
-                "George Orwell",
-                "1234567890123",
-                BigDecimal.valueOf(15.00),
-                "Dystopian novel",
-                "http://example.com/1984.jpg",
-                List.of()
-        );
+                "1984", "George Orwell", "1234567890123",
+                BigDecimal.valueOf(15.00), "Dystopian novel",
+                "http://example.com/1984.jpg", List.of());
 
-        MvcResult createResult = mockMvc.perform(post("/books")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        JsonNode jsonNode = objectMapper.readTree(createResult.getResponse().getContentAsString());
-        Long bookId = jsonNode.get("id").asLong();
+        Long bookId = createBookAndGetId(createRequest);
 
         mockMvc.perform(get("/books/{id}", bookId)
                         .with(csrf())
@@ -110,25 +103,11 @@ class BookControllerTest {
     @DisplayName("Update book by ID - success")
     void update_ValidRequest_ReturnsUpdatedBook() throws Exception {
         CreateBookRequestDto createRequest = new CreateBookRequestDto(
-                "Original Title",
-                "Original Author",
-                "1111111111111",
-                BigDecimal.valueOf(20.00),
-                "Original description",
-                "http://example.com/original.jpg",
-                List.of()
-        );
+                "Original Title", "Original Author", "1111111111111",
+                BigDecimal.valueOf(20.00), "Original description",
+                "http://example.com/original.jpg", List.of());
 
-        MvcResult createResult = mockMvc.perform(post("/books")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        JsonNode jsonNode = objectMapper.readTree(createResult.getResponse().getContentAsString());
-        Long bookId = jsonNode.get("id").asLong();
+        Long bookId = createBookAndGetId(createRequest);
 
         UpdateBookRequestDto updateRequest = new UpdateBookRequestDto();
         updateRequest.setTitle("Updated Title");
@@ -155,25 +134,11 @@ class BookControllerTest {
     @DisplayName("Delete book by ID - success (soft delete)")
     void deleteById_ValidId_SetsDeletedFlag() throws Exception {
         CreateBookRequestDto createRequest = new CreateBookRequestDto(
-                "To be deleted",
-                "Author",
-                "3333333333333",
-                BigDecimal.valueOf(10.00),
-                "To be deleted description",
-                "http://example.com/delete.jpg",
-                List.of()
-        );
+                "To be deleted", "Author", "3333333333333",
+                BigDecimal.valueOf(10.00), "To be deleted description",
+                "http://example.com/delete.jpg", List.of());
 
-        MvcResult createResult = mockMvc.perform(post("/books")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        JsonNode jsonNode = objectMapper.readTree(createResult.getResponse().getContentAsString());
-        Long bookId = jsonNode.get("id").asLong();
+        Long bookId = createBookAndGetId(createRequest);
 
         mockMvc.perform(delete("/books/{id}", bookId)
                         .with(csrf())
@@ -182,6 +147,5 @@ class BookControllerTest {
 
         Book deletedBook = bookRepository.findById(bookId).orElseThrow();
         assertTrue(deletedBook.isDeleted(), "Book should be marked as deleted");
-
     }
 }
