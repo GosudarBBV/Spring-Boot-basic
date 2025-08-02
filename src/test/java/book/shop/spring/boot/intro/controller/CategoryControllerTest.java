@@ -114,7 +114,7 @@ class CategoryControllerTest {
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.name").value("History"))
+                .andExpect(jsonPath("$.name").value("Updated History"))
                 .andExpect(jsonPath("$.description").value("Historical books"));
 
         mockMvc.perform(get("/categories/{id}", id)
