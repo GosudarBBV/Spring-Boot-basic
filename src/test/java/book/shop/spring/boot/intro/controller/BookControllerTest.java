@@ -8,10 +8,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
+import book.shop.spring.boot.intro.model.Book;
+import book.shop.spring.boot.intro.repository.BookRepository;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -37,10 +42,13 @@ class BookControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private BookRepository bookRepository;
+
     @Test
     @DisplayName("Create book - success")
     void save_ValidRequest_ReturnsCreatedBook() throws Exception {
-        var request = new CreateBookRequestDto(
+        CreateBookRequestDto request = new CreateBookRequestDto(
                 "The Hobbit",
                 "J.R.R. Tolkien",
                 "9783161484100",
@@ -66,8 +74,7 @@ class BookControllerTest {
     @Test
     @DisplayName("Get book by id - success")
     void findById_ValidId_ReturnsBook() throws Exception {
-        // Створюємо книгу
-        var createRequest = new CreateBookRequestDto(
+        CreateBookRequestDto createRequest = new CreateBookRequestDto(
                 "1984",
                 "George Orwell",
                 "1234567890123",
@@ -77,7 +84,7 @@ class BookControllerTest {
                 List.of()
         );
 
-        var createResult = mockMvc.perform(post("/books")
+        MvcResult createResult = mockMvc.perform(post("/books")
                         .with(csrf())
                         .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -85,9 +92,9 @@ class BookControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        long bookId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
+        JsonNode jsonNode = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        Long bookId = jsonNode.get("id").asLong();
 
-        // Читаємо книгу
         mockMvc.perform(get("/books/{id}", bookId)
                         .with(csrf())
                         .with(user("user").roles("USER")))
@@ -102,8 +109,7 @@ class BookControllerTest {
     @Test
     @DisplayName("Update book by ID - success")
     void update_ValidRequest_ReturnsUpdatedBook() throws Exception {
-        // Створюємо книгу
-        var createRequest = new CreateBookRequestDto(
+        CreateBookRequestDto createRequest = new CreateBookRequestDto(
                 "Original Title",
                 "Original Author",
                 "1111111111111",
@@ -113,7 +119,7 @@ class BookControllerTest {
                 List.of()
         );
 
-        var createResult = mockMvc.perform(post("/books")
+        MvcResult createResult = mockMvc.perform(post("/books")
                         .with(csrf())
                         .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -121,10 +127,10 @@ class BookControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        long bookId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
+        JsonNode jsonNode = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        Long bookId = jsonNode.get("id").asLong();
 
-        // Оновлюємо книгу
-        var updateRequest = new UpdateBookRequestDto();
+        UpdateBookRequestDto updateRequest = new UpdateBookRequestDto();
         updateRequest.setTitle("Updated Title");
         updateRequest.setAuthor("Updated Author");
         updateRequest.setIsbn("2222222222222");
@@ -146,9 +152,9 @@ class BookControllerTest {
     }
 
     @Test
-    @DisplayName("Delete book by ID - success")
-    void deleteById_ValidId_ReturnsNoContent() throws Exception {
-        var createRequest = new CreateBookRequestDto(
+    @DisplayName("Delete book by ID - success (soft delete)")
+    void deleteById_ValidId_SetsDeletedFlag() throws Exception {
+        CreateBookRequestDto createRequest = new CreateBookRequestDto(
                 "To be deleted",
                 "Author",
                 "3333333333333",
@@ -158,7 +164,7 @@ class BookControllerTest {
                 List.of()
         );
 
-        var createResult = mockMvc.perform(post("/books")
+        MvcResult createResult = mockMvc.perform(post("/books")
                         .with(csrf())
                         .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -166,16 +172,16 @@ class BookControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        long bookId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
+        JsonNode jsonNode = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        Long bookId = jsonNode.get("id").asLong();
 
         mockMvc.perform(delete("/books/{id}", bookId)
                         .with(csrf())
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/books/{id}", bookId)
-                        .with(csrf())
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isNotFound());
+        Book deletedBook = bookRepository.findById(bookId).orElseThrow();
+        assertTrue(deletedBook.isDeleted(), "Book should be marked as deleted");
+
     }
 }
