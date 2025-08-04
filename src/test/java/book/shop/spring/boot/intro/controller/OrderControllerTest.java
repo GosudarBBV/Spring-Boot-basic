@@ -75,11 +75,12 @@ class OrderControllerTest {
         user.setShippingAddress("Test Address");
         user.setRoles(new HashSet<>(Collections.singleton(role)));
 
+        // Save user and return the managed entity
         return userRepository.save(user);
     }
 
     private void createShoppingCartForUser(User user) {
-        // Завантажуємо managed entity
+        // Завантажуємо керований (managed) entity користувача
         User managedUser = userRepository.findById(user.getId())
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
@@ -91,6 +92,7 @@ class OrderControllerTest {
     private Long createOrderForUser(User user, OrderRequestDto orderRequestDto) throws Exception {
         createShoppingCartForUser(user);
 
+        // Виконуємо запит на створення замовлення
         String response = mockMvc.perform(post("/orders")
                         .with(csrf())
                         .with(user(user.getEmail()).roles(getRoleName(user)))
