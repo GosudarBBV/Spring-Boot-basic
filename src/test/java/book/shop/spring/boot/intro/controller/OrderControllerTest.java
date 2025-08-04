@@ -141,10 +141,34 @@ class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("Get order items - success")
+    void getOrderItems_ReturnsItems() throws Exception {
+        User user = createUser("user3@example.com", RoleName.USER);
+        Long orderId = createOrderForUser(user, new OrderRequestDto("Kyiv"));
+
+        mockMvc.perform(get("/orders/{orderId}/items", orderId)
+                        .with(user(user.getEmail()).roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("Get specific order item - success")
+    void getOrderItem_ReturnsSpecificItem() throws Exception {
+        User user = createUser("user4@example.com", RoleName.USER);
+        Long orderId = createOrderForUser(user, new OrderRequestDto("Kyiv"));
+
+        mockMvc.perform(get("/orders/{orderId}/items/{itemId}", orderId, 1)
+                        .with(user(user.getEmail()).roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
+    }
+
+    @Test
     @DisplayName("Update order status - success")
     void updateOrderStatus_ReturnsOk() throws Exception {
         User admin = createUser("admin@example.com", RoleName.ADMIN);
-        User user = createUser("user3@example.com", RoleName.USER);
+        User user = createUser("user5@example.com", RoleName.USER);
 
         Long orderId = createOrderForUser(user, new OrderRequestDto("Kyiv"));
         UpdateOrderStatusRequestDto updateRequest = new UpdateOrderStatusRequestDto(OrderStatus.PENDING.name());
@@ -159,18 +183,5 @@ class OrderControllerTest {
 
         Order updatedOrder = orderRepository.findById(orderId).orElseThrow();
         assertTrue(updatedOrder.getStatus() == OrderStatus.PENDING);
-    }
-
-    // Додаткові тести для інших ендпоінтів, наприклад, get order items
-    @Test
-    @DisplayName("Get order items - success")
-    void getOrderItems_ReturnsItems() throws Exception {
-        User user = createUser("user4@example.com", RoleName.USER);
-        Long orderId = createOrderForUser(user, new OrderRequestDto("Kyiv"));
-
-        mockMvc.perform(get("/orders/{orderId}/items", orderId)
-                        .with(user(user.getEmail()).roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
     }
 }
