@@ -1,6 +1,6 @@
 package book.shop.spring.boot.intro.controller;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,6 +25,8 @@ import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.HashSet;
+
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +61,7 @@ class OrderControllerTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Transactional
     private User createUser(String email, RoleName roleName) {
         Role role = roleRepository.findByName(roleName)
                 .orElseGet(() -> {
@@ -75,24 +78,18 @@ class OrderControllerTest {
         user.setShippingAddress("Test Address");
         user.setRoles(new HashSet<>(Collections.singleton(role)));
 
-        // Save user and return the managed entity
-        return userRepository.save(user);
-    }
+        User savedUser = userRepository.save(user);
 
-    private void createShoppingCartForUser(User user) {
-        // Завантажуємо керований (managed) entity користувача
-        User managedUser = userRepository.findById(user.getId())
-                .orElseThrow(() -> new IllegalStateException("User not found"));
-
+        // Одразу створюємо порожній кошик для нового користувача, щоб не було проблем з detached entity
         ShoppingCart cart = new ShoppingCart();
-        cart.setUser(managedUser);
+        cart.setUser(savedUser);
         shoppingCartRepository.save(cart);
+
+        return savedUser;
     }
 
     private Long createOrderForUser(User user, OrderRequestDto orderRequestDto) throws Exception {
-        createShoppingCartForUser(user);
-
-        // Виконуємо запит на створення замовлення
+        // Створюємо замовлення від імені користувача
         String response = mockMvc.perform(post("/orders")
                         .with(csrf())
                         .with(user(user.getEmail()).roles(getRoleName(user)))
@@ -184,6 +181,6 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.status").value("PENDING"));
 
         Order updatedOrder = orderRepository.findById(orderId).orElseThrow();
-        assertTrue(updatedOrder.getStatus() == OrderStatus.PENDING);
+        assertEquals(OrderStatus.PENDING, updatedOrder.getStatus());
     }
 }
