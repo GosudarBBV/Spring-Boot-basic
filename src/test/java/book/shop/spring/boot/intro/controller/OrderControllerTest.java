@@ -79,6 +79,7 @@ class OrderControllerTest {
         user.setRoles(new HashSet<>(Collections.singleton(role)));
 
         User savedUser = userRepository.save(user);
+        savedUser = userRepository.findById(savedUser.getId()).orElseThrow();
 
         ShoppingCart cart = new ShoppingCart();
         cart.setUser(savedUser);
