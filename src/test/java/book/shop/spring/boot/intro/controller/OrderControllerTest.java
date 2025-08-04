@@ -61,7 +61,6 @@ class OrderControllerTest {
     @Autowired
     private OrderRepository orderRepository;
 
-    @Transactional
     private User createUser(String email, RoleName roleName) {
         Role role = roleRepository.findByName(roleName)
                 .orElseGet(() -> {
