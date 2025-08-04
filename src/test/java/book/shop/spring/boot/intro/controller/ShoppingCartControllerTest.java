@@ -6,30 +6,27 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
+import book.shop.spring.boot.intro.dto.CartItemResponseDto;
+import book.shop.spring.boot.intro.dto.ShoppingCartResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateCartItemRequestDto;
-import book.shop.spring.boot.intro.model.Book;
-import book.shop.spring.boot.intro.model.Role;
-import book.shop.spring.boot.intro.model.RoleName;
-import book.shop.spring.boot.intro.model.User;
-import book.shop.spring.boot.intro.repository.BookRepository;
-import book.shop.spring.boot.intro.repository.CartItemRepository;
-import book.shop.spring.boot.intro.repository.RoleRepository;
-import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
-import book.shop.spring.boot.intro.repository.UserRepository;
-import book.shop.spring.boot.intro.util.TestEntityFactory;
+import book.shop.spring.boot.intro.security.JwtUtil;
+import book.shop.spring.boot.intro.service.ShoppingCartService;
+import book.shop.spring.boot.intro.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -47,91 +44,100 @@ class ShoppingCartControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
+    @MockBean
+    private ShoppingCartService shoppingCartService;
 
-    @Autowired
-    private RoleRepository roleRepository;
+    @MockBean
+    private UserService userService;
 
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private ShoppingCartRepository shoppingCartRepository;
-
-    @Autowired
-    private CartItemRepository cartItemRepository;
-
-    private User testUser;
-    private Book testBook;
+    @MockBean
+    private JwtUtil jwtUtil;
 
     @Test
     @DisplayName("Add book to cart returns updated cart")
     void addBookToCart_ValidRequest_ReturnsCart() throws Exception {
-        Role userRole = new Role();
-        userRole.setName(RoleName.USER);
-        roleRepository.save(userRole);
+        Long userId = 1L;
+        AddCartItemRequestDto request = new AddCartItemRequestDto(2L, 3);
 
-        testUser = TestEntityFactory.createTestUser("user@example.com");
-        testUser.setRoles(Set.of(userRole));
-        testUser = userRepository.save(testUser);
+        CartItemResponseDto cartItem = new CartItemResponseDto(
+                100L, 2L, "The Great Gatsby", 3
+        );
+        ShoppingCartResponseDto response = new ShoppingCartResponseDto(
+                1L, userId, List.of(cartItem)
+        );
 
-        testBook = TestEntityFactory.createBook(null, "Test Book", new BigDecimal("99.99"));
-        testBook = bookRepository.save(testBook);
-
-        AddCartItemRequestDto request = new AddCartItemRequestDto(testBook.getId(), 2);
+        when(userService.getAuthenticatedUserId()).thenReturn(userId);
+        when(shoppingCartService.addBookToCart(eq(2L), eq(3), eq(userId)))
+                .thenReturn(response);
 
         mockMvc.perform(post("/cart")
                         .with(csrf())
-                        .with(user(testUser.getEmail()).roles("USER"))
+                        .with(user("user").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(testUser.getId()))
-                .andExpect(jsonPath("$.cartItems[0].bookId").value(testBook.getId()))
-                .andExpect(jsonPath("$.cartItems[0].quantity").value(2));
+                .andExpect(content().json(objectMapper.writeValueAsString(response)));
     }
 
     @Test
     @DisplayName("Get current user's cart returns shopping cart")
     void getShoppingCart_ReturnsCart() throws Exception {
-        addBookToCart_ValidRequest_ReturnsCart();
+        Long userId = 1L;
+
+        CartItemResponseDto cartItem = new CartItemResponseDto(
+                101L, 3L, "1984", 2
+        );
+        ShoppingCartResponseDto response = new ShoppingCartResponseDto(
+                1L, userId, List.of(cartItem)
+        );
+
+        when(userService.getAuthenticatedUserId()).thenReturn(userId);
+        when(shoppingCartService.getCartByUser(userId)).thenReturn(response);
 
         mockMvc.perform(get("/cart")
-                        .with(user(testUser.getEmail()).roles("USER")))
+                        .with(user("user").roles("USER")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(testUser.getId()))
-                .andExpect(jsonPath("$.cartItems[0].bookId").value(testBook.getId()))
-                .andExpect(jsonPath("$.cartItems[0].quantity").value(2));
+                .andExpect(content().json(objectMapper.writeValueAsString(response)));
     }
 
     @Test
     @DisplayName("Update cart item returns updated cart")
     void updateCartItem_ValidRequest_ReturnsCart() throws Exception {
-        addBookToCart_ValidRequest_ReturnsCart();
-        Long cartItemId = cartItemRepository.findAll().get(0).getId();
-
+        Long userId = 1L;
+        Long cartItemId = 200L;
         UpdateCartItemRequestDto request = new UpdateCartItemRequestDto(5);
+
+        CartItemResponseDto updatedItem = new CartItemResponseDto(
+                cartItemId, 5L, "Dune", 5
+        );
+        ShoppingCartResponseDto response = new ShoppingCartResponseDto(
+                2L, userId, List.of(updatedItem)
+        );
+
+        when(userService.getAuthenticatedUserId()).thenReturn(userId);
+        when(shoppingCartService.updateCartItem(eq(cartItemId), eq(request), eq(userId)))
+                .thenReturn(response);
 
         mockMvc.perform(put("/cart/items/{cartItemId}", cartItemId)
                         .with(csrf())
-                        .with(user(testUser.getEmail()).roles("USER"))
+                        .with(user("user").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cartItems[0].id").value(cartItemId))
-                .andExpect(jsonPath("$.cartItems[0].quantity").value(5));
+                .andExpect(content().json(objectMapper.writeValueAsString(response)));
     }
 
     @Test
     @DisplayName("Delete cart item returns 204")
     void deleteCartItem_ValidRequest_ReturnsNoContent() throws Exception {
-        addBookToCart_ValidRequest_ReturnsCart();
-        Long cartItemId = cartItemRepository.findAll().get(0).getId();
+        Long userId = 1L;
+        Long cartItemId = 300L;
+
+        when(userService.getAuthenticatedUserId()).thenReturn(userId);
 
         mockMvc.perform(delete("/cart/items/{cartItemId}", cartItemId)
                         .with(csrf())
-                        .with(user(testUser.getEmail()).roles("USER")))
+                        .with(user("user").roles("USER")))
                 .andExpect(status().isNoContent());
     }
 }

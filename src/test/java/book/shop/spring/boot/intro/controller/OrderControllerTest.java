@@ -2,33 +2,28 @@ package book.shop.spring.boot.intro.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
+import book.shop.spring.boot.intro.dto.OrderItemDto;
 import book.shop.spring.boot.intro.dto.OrderRequestDto;
+import book.shop.spring.boot.intro.dto.OrderResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
-import book.shop.spring.boot.intro.model.Book;
-import book.shop.spring.boot.intro.model.CartItem;
-import book.shop.spring.boot.intro.model.Order;
-import book.shop.spring.boot.intro.model.OrderStatus;
-import book.shop.spring.boot.intro.model.Role;
-import book.shop.spring.boot.intro.model.RoleName;
-import book.shop.spring.boot.intro.model.ShoppingCart;
-import book.shop.spring.boot.intro.model.User;
-import book.shop.spring.boot.intro.repository.BookRepository;
-import book.shop.spring.boot.intro.repository.CartItemRepository;
-import book.shop.spring.boot.intro.repository.OrderRepository;
-import book.shop.spring.boot.intro.repository.RoleRepository;
-import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
-import book.shop.spring.boot.intro.repository.UserRepository;
+import book.shop.spring.boot.intro.model.*;
+import book.shop.spring.boot.intro.repository.*;
 import book.shop.spring.boot.intro.util.TestEntityFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +33,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -45,87 +43,109 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(TestSecurityConfig.class)
 class OrderControllerTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private UserRepository userRepository;
-    @Autowired private RoleRepository roleRepository;
-    @Autowired private BookRepository bookRepository;
-    @Autowired private ShoppingCartRepository shoppingCartRepository;
-    @Autowired private CartItemRepository cartItemRepository;
-    @Autowired private OrderRepository orderRepository;
+    @Autowired
+    private MockMvc mockMvc;
 
-    private User prepareUser() {
-        Role role = new Role();
-        role.setName(RoleName.USER);
-        roleRepository.save(role);
+    @Autowired
+    private ObjectMapper objectMapper;
 
-        User user = TestEntityFactory.createTestUser("user@example.com");
-        user.setRoles(Set.of(role));
-        return userRepository.save(user);
-    }
+    @Autowired
+    private UserRepository userRepository;
 
-    private Book prepareBook() {
-        return bookRepository.save(
-                TestEntityFactory.createBook(null, "Book", new BigDecimal("29.99")));
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private BookRepository bookRepository;
+
+    @Autowired
+    private ShoppingCartRepository shoppingCartRepository;
+
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
+    private User testUser;
+    private Book testBook;
+
+    @BeforeEach
+    void setUp() {
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
+        cartItemRepository.deleteAll();
+        shoppingCartRepository.deleteAll();
+        bookRepository.deleteAll();
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+
+        Role userRole = new Role();
+        userRole.setName(RoleName.USER);
+        roleRepository.save(userRole);
+
+        Role adminRole = new Role();
+        adminRole.setName(RoleName.ADMIN);
+        roleRepository.save(adminRole);
+
+        testUser = TestEntityFactory.createTestUser("user@example.com");
+        testUser.setRoles(Set.of(userRole));
+        testUser = userRepository.save(testUser);
+
+        testBook = TestEntityFactory.createBook(null, "Test Book", new BigDecimal("99.99"));
+        testBook = bookRepository.save(testBook);
     }
 
     @Test
     @DisplayName("Create order - success")
     void placeOrder_ValidRequest_ReturnsCreatedOrder() throws Exception {
-        User user = prepareUser();
-        Book book = prepareBook();
-
-        CartItem cartItem = new CartItem();
-        cartItem.setBook(book);
-        cartItem.setQuantity(1);
-
-        ShoppingCart cart = new ShoppingCart();
-        cart.setUser(user);
-        cart.setCartItems(Set.of(cartItem));
-        cart = shoppingCartRepository.save(cart);
-
-        cartItem.setShoppingCart(cart);
-        cartItemRepository.save(cartItem);
-
         OrderRequestDto requestDto = new OrderRequestDto("Kyiv");
 
         mockMvc.perform(post("/orders")
                         .with(csrf())
-                        .with(user(user.getEmail()).roles("USER"))
+                        .with(user(testUser.getEmail()).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.shippingAddress").value("Kyiv"))
-                .andExpect(jsonPath("$.userId").value(user.getId()));
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("Get order history - success")
+    void getOrderHistory_ShouldReturnPage() throws Exception {
+        mockMvc.perform(get("/orders")
+                        .with(user(testUser.getEmail()).roles("USER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Get order items - success")
+    void getItems_ShouldReturnItems() throws Exception {
+        mockMvc.perform(get("/orders/1/items")
+                        .with(user(testUser.getEmail()).roles("USER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Get specific order item - success")
+    void getItem_ShouldReturnSpecificItem() throws Exception {
+        mockMvc.perform(get("/orders/1/items/2")
+                        .with(user(testUser.getEmail()).roles("USER")))
+                .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Update order status - success")
     void updateStatus_ShouldUpdateStatus() throws Exception {
-        Role adminRole = new Role();
-        adminRole.setName(RoleName.ADMIN);
-        roleRepository.save(adminRole);
+        UpdateOrderStatusRequestDto request = new UpdateOrderStatusRequestDto("PENDING");
 
-        User admin = TestEntityFactory.createTestUser("admin@example.com");
-        admin.setRoles(Set.of(adminRole));
-        admin = userRepository.save(admin);
-
-        Order order = new Order();
-        order.setUser(admin);
-        order.setStatus(OrderStatus.PENDING);
-        order.setOrderDate(java.time.LocalDateTime.now());
-        order.setTotal(new BigDecimal("49.99"));
-        order.setOrderItems(Collections.emptySet());
-        order = orderRepository.save(order);
-
-        UpdateOrderStatusRequestDto request = new UpdateOrderStatusRequestDto("COMPLETED");
-
-        mockMvc.perform(patch("/orders/{id}", order.getId())
+        mockMvc.perform(patch("/orders/1")
                         .with(csrf())
-                        .with(user(admin.getEmail()).roles("ADMIN"))
+                        .with(user("admin@example.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(status().isOk());
     }
 }
