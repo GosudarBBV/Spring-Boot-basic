@@ -41,6 +41,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 @Import(TestSecurityConfig.class)
 class OrderControllerTest {
 
@@ -79,10 +80,14 @@ class OrderControllerTest {
         user.setRoles(Set.of(role));
 
         User savedUser = userRepository.save(user);
+        userRepository.flush();
 
         ShoppingCart cart = new ShoppingCart();
         cart.setUser(savedUser);
         shoppingCartRepository.save(cart);
+        shoppingCartRepository.flush();
+
+        savedUser = userRepository.findById(savedUser.getId()).orElseThrow();
 
         return savedUser;
     }
