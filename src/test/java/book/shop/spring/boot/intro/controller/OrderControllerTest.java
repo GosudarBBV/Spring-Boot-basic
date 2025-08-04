@@ -25,6 +25,7 @@ import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
@@ -75,10 +76,9 @@ class OrderControllerTest {
         user.setFirstName("Test");
         user.setLastName("User");
         user.setShippingAddress("Test Address");
-        user.setRoles(new HashSet<>(Collections.singleton(role)));
+        user.setRoles(Set.of(role));
 
         User savedUser = userRepository.save(user);
-        savedUser = userRepository.findById(savedUser.getId()).orElseThrow();
 
         ShoppingCart cart = new ShoppingCart();
         cart.setUser(savedUser);
