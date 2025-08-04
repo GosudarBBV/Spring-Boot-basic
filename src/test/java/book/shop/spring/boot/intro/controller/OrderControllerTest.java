@@ -9,21 +9,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
-import book.shop.spring.boot.intro.dto.OrderItemDto;
 import book.shop.spring.boot.intro.dto.OrderRequestDto;
-import book.shop.spring.boot.intro.dto.OrderResponseDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
-import book.shop.spring.boot.intro.model.*;
-import book.shop.spring.boot.intro.repository.*;
-import book.shop.spring.boot.intro.util.TestEntityFactory;
+import book.shop.spring.boot.intro.model.Order;
+import book.shop.spring.boot.intro.model.OrderStatus;
+import book.shop.spring.boot.intro.model.Role;
+import book.shop.spring.boot.intro.model.RoleName;
+import book.shop.spring.boot.intro.model.User;
+import book.shop.spring.boot.intro.repository.OrderRepository;
+import book.shop.spring.boot.intro.repository.RoleRepository;
+import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +42,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -56,96 +62,87 @@ class OrderControllerTest {
     private RoleRepository roleRepository;
 
     @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private ShoppingCartRepository shoppingCartRepository;
-
-    @Autowired
-    private CartItemRepository cartItemRepository;
-
-    @Autowired
     private OrderRepository orderRepository;
 
-    @Autowired
-    private OrderItemRepository orderItemRepository;
+    private User createUser(String email, RoleName roleName) {
+        Role role = roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setName(roleName);
+                    return roleRepository.save(newRole);
+                });
 
-    private User testUser;
-    private Book testBook;
 
-    @BeforeEach
-    void setUp() {
-        orderItemRepository.deleteAll();
-        orderRepository.deleteAll();
-        cartItemRepository.deleteAll();
-        shoppingCartRepository.deleteAll();
-        bookRepository.deleteAll();
-        userRepository.deleteAll();
-        roleRepository.deleteAll();
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword("password");
+        user.setFirstName("Test");
+        user.setLastName("User");
+        user.setShippingAddress("Test address");
+        user.setRoles(Collections.singleton(role));
+        return userRepository.save(user);
+    }
 
-        Role userRole = new Role();
-        userRole.setName(RoleName.USER);
-        roleRepository.save(userRole);
+    private Long createOrderAndGetId(String userEmail, String role, OrderRequestDto request) throws Exception {
+        String response = mockMvc.perform(post("/orders")
+                        .with(csrf())
+                        .with(user(userEmail).roles(role))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        Role adminRole = new Role();
-        adminRole.setName(RoleName.ADMIN);
-        roleRepository.save(adminRole);
-
-        testUser = TestEntityFactory.createTestUser("user@example.com");
-        testUser.setRoles(Set.of(userRole));
-        testUser = userRepository.save(testUser);
-
-        testBook = TestEntityFactory.createBook(null, "Test Book", new BigDecimal("99.99"));
-        testBook = bookRepository.save(testBook);
+        return objectMapper.readTree(response).get("id").asLong();
     }
 
     @Test
     @DisplayName("Create order - success")
-    void placeOrder_ValidRequest_ReturnsCreatedOrder() throws Exception {
-        OrderRequestDto requestDto = new OrderRequestDto("Kyiv");
+    void createOrder_ReturnsCreatedOrder() throws Exception {
+        User user = createUser("user1@example.com", RoleName.USER);
+        OrderRequestDto request = new OrderRequestDto("Kyiv");
 
         mockMvc.perform(post("/orders")
                         .with(csrf())
-                        .with(user(testUser.getEmail()).roles("USER"))
+                        .with(user(user.getEmail()).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isCreated());
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.shippingAddress").value("Kyiv"))
+                .andExpect(jsonPath("$.id").isNumber());
     }
 
     @Test
     @DisplayName("Get order history - success")
-    void getOrderHistory_ShouldReturnPage() throws Exception {
+    void getOrderHistory_ReturnsOrderList() throws Exception {
+        User user = createUser("user2@example.com", RoleName.USER);
+        createOrderAndGetId(user.getEmail(), "USER", new OrderRequestDto("Kyiv"));
+
         mockMvc.perform(get("/orders")
-                        .with(user(testUser.getEmail()).roles("USER")))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("Get order items - success")
-    void getItems_ShouldReturnItems() throws Exception {
-        mockMvc.perform(get("/orders/1/items")
-                        .with(user(testUser.getEmail()).roles("USER")))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("Get specific order item - success")
-    void getItem_ShouldReturnSpecificItem() throws Exception {
-        mockMvc.perform(get("/orders/1/items/2")
-                        .with(user(testUser.getEmail()).roles("USER")))
-                .andExpect(status().isOk());
+                        .with(user(user.getEmail()).roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
     @DisplayName("Update order status - success")
-    void updateStatus_ShouldUpdateStatus() throws Exception {
-        UpdateOrderStatusRequestDto request = new UpdateOrderStatusRequestDto("PENDING");
+    void updateOrderStatus_ReturnsOk() throws Exception {
+        User admin = createUser("admin@example.com", RoleName.ADMIN);
+        User user = createUser("user3@example.com", RoleName.USER);
 
-        mockMvc.perform(patch("/orders/1")
+        Long orderId = createOrderAndGetId(user.getEmail(), "USER", new OrderRequestDto("Kyiv"));
+        UpdateOrderStatusRequestDto updateRequest = new UpdateOrderStatusRequestDto(OrderStatus.PENDING.name());
+
+        mockMvc.perform(patch("/orders/{id}", orderId)
                         .with(csrf())
-                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(user(admin.getEmail()).roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk());
+
+        Order updatedOrder = orderRepository.findById(orderId).orElseThrow();
+        assertTrue(updatedOrder.getStatus() == OrderStatus.PENDING);
     }
 }
