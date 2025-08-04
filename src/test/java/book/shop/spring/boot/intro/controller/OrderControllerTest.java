@@ -1,7 +1,6 @@
 package book.shop.spring.boot.intro.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -81,7 +80,6 @@ class OrderControllerTest {
 
         User savedUser = userRepository.save(user);
 
-        // Одразу створюємо порожній кошик для нового користувача, щоб не було проблем з detached entity
         ShoppingCart cart = new ShoppingCart();
         cart.setUser(savedUser);
         shoppingCartRepository.save(cart);
@@ -90,7 +88,6 @@ class OrderControllerTest {
     }
 
     private Long createOrderForUser(User user, OrderRequestDto orderRequestDto) throws Exception {
-        // Створюємо замовлення від імені користувача
         String response = mockMvc.perform(post("/orders")
                         .with(csrf())
                         .with(user(user.getEmail()).roles(getRoleName(user)))
@@ -158,6 +155,7 @@ class OrderControllerTest {
         User user = createUser("user4@example.com", RoleName.USER);
         Long orderId = createOrderForUser(user, new OrderRequestDto("Kyiv"));
 
+        // Тут 1 — це id item, передбачаємо що такий є (або потрібно створити додатково)
         mockMvc.perform(get("/orders/{orderId}/items/{itemId}", orderId, 1)
                         .with(user(user.getEmail()).roles("USER")))
                 .andExpect(status().isOk())
