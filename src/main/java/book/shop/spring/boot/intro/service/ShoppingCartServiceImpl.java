@@ -10,7 +10,6 @@ import book.shop.spring.boot.intro.model.ShoppingCart;
 import book.shop.spring.boot.intro.repository.BookRepository;
 import book.shop.spring.boot.intro.repository.CartItemRepository;
 import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
-import book.shop.spring.boot.intro.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
