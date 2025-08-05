@@ -56,6 +56,7 @@ public class OrderControllerTest {
 
     @BeforeEach
     void setupFakeUser() throws Exception {
+        // Реєструємо користувача через API
         CreateUserRequestDto userDto = new CreateUserRequestDto(
                 EMAIL_USER,
                 "password",
@@ -71,6 +72,7 @@ public class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(userDto)))
                 .andExpect(status().isOk());
 
+        // Створюємо кошик для користувача, якщо його немає
         createCartForUser(EMAIL_USER);
     }
 
@@ -83,6 +85,7 @@ public class OrderControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
+        // Створюємо кошик після створення користувача
         createCartForUser(email);
 
         return objectMapper.readTree(response).get("id").asLong();
@@ -91,6 +94,7 @@ public class OrderControllerTest {
     private void createCartForUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
         boolean exists = shoppingCartRepository.existsByUserId(user.getId());
         if (!exists) {
             ShoppingCart cart = new ShoppingCart();
