@@ -21,6 +21,7 @@ public class TestSecurityConfig {
         http.csrf().disable()
                 .authorizeHttpRequests()
                 .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/users/register").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic();
