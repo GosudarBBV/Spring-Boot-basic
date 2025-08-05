@@ -102,10 +102,14 @@ public class OrderControllerTest {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
-        boolean exists = shoppingCartRepository.existsByUserId(user.getId());
-        if (!exists) {
+        // Переконаємось, що user — managed entity (підключений до сесії)
+        User managedUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found by id: " + user.getId()));
+
+        boolean cartExists = shoppingCartRepository.existsByUserId(managedUser.getId());
+        if (!cartExists) {
             ShoppingCart cart = new ShoppingCart();
-            cart.setUser(user);
+            cart.setUser(managedUser);
             shoppingCartRepository.save(cart);
         }
     }
