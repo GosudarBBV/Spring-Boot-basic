@@ -79,12 +79,19 @@ public class OrderControllerTest {
     }
 
     private void addBookToCart(String userEmail, Long bookId) throws Exception {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        String usernameForSecurity;
+
+        if ("fakeuser@example.com".equals(userEmail)) {
+            usernameForSecurity = "fakeuser@example.com";
+        } else {
+            User user = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            usernameForSecurity = user.getEmail();
+        }
 
         mockMvc.perform(post("/shopping-cart/add")
                         .with(csrf())
-                        .with(user(user.getEmail()).roles("USER"))  // або з userDetailsService, якщо складна логіка
+                        .with(user(usernameForSecurity).roles("USER"))
                         .param("bookId", String.valueOf(bookId))
                         .param("quantity", "1"))
                 .andExpect(status().isOk());
