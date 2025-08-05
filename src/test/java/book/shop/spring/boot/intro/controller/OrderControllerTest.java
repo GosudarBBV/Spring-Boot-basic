@@ -12,19 +12,10 @@ import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.model.*;
-import book.shop.spring.boot.intro.repository.BookRepository;
-import book.shop.spring.boot.intro.repository.CartItemRepository;
-import book.shop.spring.boot.intro.repository.RoleRepository;
-import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
-import book.shop.spring.boot.intro.repository.UserRepository;
+import book.shop.spring.boot.intro.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,64 +56,35 @@ public class OrderControllerTest {
     @Autowired
     private CartItemRepository cartItemRepository;
 
-    private User testUser;
-    private User testAdmin;
-
-    @BeforeEach
-    void setUp() {
-        // 1. Створити ролі, якщо їх немає
-        Role roleUser = roleRepository.findByName(RoleName.USER)
+    private User createUserIfNotExist(String email, RoleName roleName, String password, String firstName, String lastName) {
+        Role role = roleRepository.findByName(roleName)
                 .orElseGet(() -> {
                     Role r = new Role();
-                    r.setName(RoleName.USER);
+                    r.setName(roleName);
                     return roleRepository.save(r);
                 });
-
-        Role roleAdmin = roleRepository.findByName(RoleName.ADMIN)
-                .orElseGet(() -> {
-                    Role r = new Role();
-                    r.setName(RoleName.ADMIN);
-                    return roleRepository.save(r);
-                });
-
-        // 2. Створити тестового користувача
-        testUser = userRepository.findByEmail(TEST_USER_EMAIL)
+        return userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     User u = new User();
-                    u.setEmail(TEST_USER_EMAIL);
-                    u.setPassword("{noop}password");
-                    u.setFirstName("Test");
-                    u.setLastName("User");
-                    u.setRoles(Set.of(roleUser));
+                    u.setEmail(email);
+                    u.setPassword("{noop}" + password);
+                    u.setFirstName(firstName);
+                    u.setLastName(lastName);
+                    u.setRoles(Set.of(role));
                     return userRepository.save(u);
                 });
+    }
 
-        testAdmin = userRepository.findByEmail(TEST_ADMIN_EMAIL)
-                .orElseGet(() -> {
-                    User u = new User();
-                    u.setEmail(TEST_ADMIN_EMAIL);
-                    u.setPassword("{noop}adminpassword");
-                    u.setFirstName("Admin");
-                    u.setLastName("User");
-                    u.setRoles(Set.of(roleAdmin));
-                    return userRepository.save(u);
-                });
-
-        // 3. Отримати testUser ще раз, щоб був точно managed
-        testUser = userRepository.findById(testUser.getId()).orElseThrow();
-
-        // 4. Створити або отримати кошик
-        ShoppingCart cart = shoppingCartRepository.findByUserId(testUser.getId())
+    private void prepareTestDataForUser(User user) {
+        // Отримати або створити кошик
+        ShoppingCart cart = shoppingCartRepository.findByUserId(user.getId())
                 .orElseGet(() -> {
                     ShoppingCart c = new ShoppingCart();
-                    c.setUser(testUser); // Managed
+                    c.setUser(user);
                     return shoppingCartRepository.save(c);
                 });
 
-        // Отримати cart як managed
-        cart = shoppingCartRepository.findById(cart.getId()).orElseThrow();
-
-        // 5. Створити або отримати книгу
+        // Отримати або створити книгу
         Book book = bookRepository.findAll().stream().findFirst().orElseGet(() -> {
             Book b = new Book();
             b.setTitle("Test Book");
@@ -131,20 +93,15 @@ public class OrderControllerTest {
             return bookRepository.save(b);
         });
 
-        // Отримати book як managed
-        book = bookRepository.findById(book.getId()).orElseThrow();
-
-        // 6. Додати CartItem, якщо ще не існує
-        ShoppingCart finalCart = cart;
-        Book finalBook = book;
+        // Додати CartItem, якщо немає
         boolean cartItemExists = cartItemRepository.findAll().stream()
-                .anyMatch(ci -> ci.getShoppingCart().getId().equals(finalCart.getId())
-                        && ci.getBook().getId().equals(finalBook.getId()));
+                .anyMatch(ci -> ci.getShoppingCart().getId().equals(cart.getId())
+                        && ci.getBook().getId().equals(book.getId()));
 
         if (!cartItemExists) {
             CartItem cartItem = new CartItem();
-            cartItem.setShoppingCart(cart); // Managed
-            cartItem.setBook(book);         // Managed
+            cartItem.setShoppingCart(cart);
+            cartItem.setBook(book);
             cartItem.setQuantity(1);
             cartItemRepository.save(cartItem);
         }
@@ -153,6 +110,9 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Place order - success for USER role")
     void placeOrder_asUser_shouldReturnCreatedOrder() throws Exception {
+        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
+        prepareTestDataForUser(testUser);
+
         OrderRequestDto requestDto = new OrderRequestDto("123 Test St, Kyiv");
 
         mockMvc.perform(post("/orders")
@@ -168,6 +128,9 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Get order history - success for USER role")
     void getOrderHistory_asUser_shouldReturnPagedOrders() throws Exception {
+        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
+        prepareTestDataForUser(testUser);
+
         mockMvc.perform(get("/orders")
                         .with(user(TEST_USER_EMAIL).roles("USER")))
                 .andExpect(status().isOk())
@@ -177,6 +140,9 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Get order items - success for USER role")
     void getOrderItems_asUser_shouldReturnList() throws Exception {
+        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
+        prepareTestDataForUser(testUser);
+
         mockMvc.perform(get("/orders/1/items")
                         .with(user(TEST_USER_EMAIL).roles("USER")))
                 .andExpect(status().isOk())
@@ -186,6 +152,9 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Get order item by ID - success for USER role")
     void getOrderItem_asUser_shouldReturnItem() throws Exception {
+        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
+        prepareTestDataForUser(testUser);
+
         mockMvc.perform(get("/orders/1/items/1")
                         .with(user(TEST_USER_EMAIL).roles("USER")))
                 .andExpect(status().isOk())
@@ -195,6 +164,9 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Update order status - success for ADMIN role")
     void updateOrderStatus_asAdmin_shouldUpdateStatus() throws Exception {
+        User testAdmin = createUserIfNotExist(TEST_ADMIN_EMAIL, RoleName.ADMIN, "adminpassword", "Admin", "User");
+        // Не обов’язково створювати кошик/книгу для цього тесту
+
         UpdateOrderStatusRequestDto requestDto = new UpdateOrderStatusRequestDto(OrderStatus.COMPLETED.name());
 
         mockMvc.perform(patch("/orders/1")
@@ -209,6 +181,9 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Update order status - forbidden for USER role")
     void updateOrderStatus_asUser_shouldBeForbidden() throws Exception {
+        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
+        // Не обов’язково створювати кошик/книгу для цього тесту
+
         UpdateOrderStatusRequestDto requestDto = new UpdateOrderStatusRequestDto(OrderStatus.COMPLETED.name());
 
         mockMvc.perform(patch("/orders/1")
