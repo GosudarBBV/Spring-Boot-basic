@@ -14,8 +14,11 @@ import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.dto.CreateUserRequestDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
+import book.shop.spring.boot.intro.model.Role;
+import book.shop.spring.boot.intro.model.RoleName;
 import book.shop.spring.boot.intro.model.ShoppingCart;
 import book.shop.spring.boot.intro.model.User;
+import book.shop.spring.boot.intro.repository.RoleRepository;
 import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
 import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,25 +57,29 @@ public class OrderControllerTest {
     @Autowired
     private ShoppingCartRepository shoppingCartRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     @BeforeEach
-    void setupFakeUser() throws Exception {
-        // Реєструємо користувача через API
-        CreateUserRequestDto userDto = new CreateUserRequestDto(
-                EMAIL_USER,
-                "password",
-                "password",
-                "Fake",
-                "User",
-                "USER"
-        );
+    void setupFakeUser() {
+        Role userRole = roleRepository.findByName(RoleName.USER)
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setName(RoleName.USER);
+                    return roleRepository.save(newRole);
+                });
 
-        mockMvc.perform(post("/auth/registration")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isOk());
+        // Перевіряємо, чи користувач уже є, щоб уникнути дублювання
+        userRepository.findByEmail(EMAIL_USER).orElseGet(() -> {
+            User user = new User();
+            user.setEmail(EMAIL_USER);
+            user.setPassword("{noop}password"); // або як у вас хешується пароль
+            user.setFirstName("Fake");
+            user.setLastName("User");
+            user.getRoles().add(userRole);
+            return userRepository.save(user);
+        });
 
-        // Створюємо кошик для користувача, якщо його немає
         createCartForUser(EMAIL_USER);
     }
 
