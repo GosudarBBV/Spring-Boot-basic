@@ -14,6 +14,10 @@ import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.dto.CreateUserRequestDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
+import book.shop.spring.boot.intro.model.ShoppingCart;
+import book.shop.spring.boot.intro.model.User;
+import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
+import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
@@ -44,6 +48,12 @@ public class OrderControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ShoppingCartRepository shoppingCartRepository;
+
     @BeforeEach
     void setupFakeUser() throws Exception {
         CreateUserRequestDto userDto = new CreateUserRequestDto(
@@ -60,6 +70,8 @@ public class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
                 .andExpect(status().isOk());
+
+        createCartForUser(EMAIL_USER);
     }
 
     private Long createUser(String email, String password, String firstName, String lastName, String role) throws Exception {
@@ -70,7 +82,21 @@ public class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(userDto)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
+
+        createCartForUser(email);
+
         return objectMapper.readTree(response).get("id").asLong();
+    }
+
+    private void createCartForUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+        boolean exists = shoppingCartRepository.existsByUserId(user.getId());
+        if (!exists) {
+            ShoppingCart cart = new ShoppingCart();
+            cart.setUser(user);
+            shoppingCartRepository.save(cart);
+        }
     }
 
     private Long createBook(String title, String author, double price) throws Exception {

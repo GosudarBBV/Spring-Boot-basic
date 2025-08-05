@@ -24,7 +24,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final CartItemRepository cartItemRepository;
     private final ShoppingCartMapper shoppingCartMapper;
     private final BookRepository bookRepository;
-    private final UserRepository userRepository;
 
     public ShoppingCartResponseDto addBookToCart(Long bookId, int quantity, Long userId) {
         ShoppingCart cart = shoppingCartRepository.findByUserId(userId)
