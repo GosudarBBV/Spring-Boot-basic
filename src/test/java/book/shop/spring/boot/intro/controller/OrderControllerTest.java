@@ -41,7 +41,7 @@ public class OrderControllerTest {
     private ObjectMapper objectMapper;
 
     private Long createUser(String email, String password, String firstName, String lastName, String role) throws Exception {
-        CreateUserRequestDto userDto = new CreateUserRequestDto(email, password, firstName, lastName, role);
+        CreateUserRequestDto userDto = new CreateUserRequestDto(email, password, password, firstName, lastName, role);
         String response = mockMvc.perform(post("/auth/registration") // виправлений URL для реєстрації
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)

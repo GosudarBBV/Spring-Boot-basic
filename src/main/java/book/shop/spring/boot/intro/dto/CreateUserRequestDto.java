@@ -17,6 +17,8 @@ public record CreateUserRequestDto(
         @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
         String password,
 
+        String repeatPassword,
+
         @Schema(description = "User's first name", example = "John", required = true)
         @NotBlank(message = "First name cannot be blank")
         String firstName,
