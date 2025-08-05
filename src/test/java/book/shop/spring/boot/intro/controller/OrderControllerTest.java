@@ -36,7 +36,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(TestSecurityConfig.class)
 public class OrderControllerTest {
 
-    private static final String FAKE_USER_EMAIL = "fakeuser@example.com";
+    private static final String EMAIL_USER = "test_user@example.com";
+    private static final String EMAIL_ADMIN = "test_admin@example.com";
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,7 +48,7 @@ public class OrderControllerTest {
     @BeforeEach
     void setupFakeUser() throws Exception {
         CreateUserRequestDto userDto = new CreateUserRequestDto(
-                FAKE_USER_EMAIL,
+                EMAIL_USER,
                 "password",
                 "password",
                 "Fake",
@@ -55,7 +56,6 @@ public class OrderControllerTest {
                 "USER"
         );
 
-        // Створюємо fake user, якщо ще не створений
         mockMvc.perform(post("/auth/registration")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -71,8 +71,7 @@ public class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(userDto)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        JsonNode json = objectMapper.readTree(response);
-        return json.get("id").asLong();
+        return objectMapper.readTree(response).get("id").asLong();
     }
 
     private Long createBook(String title, String author, double price) throws Exception {
@@ -92,11 +91,9 @@ public class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(bookDto)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        JsonNode json = objectMapper.readTree(response);
-        return json.get("id").asLong();
+        return objectMapper.readTree(response).get("id").asLong();
     }
 
-    // Тепер addBookToCart приймає email, щоб додавати в кошик саме цього користувача
     private void addBookToCart(String userEmail, Long bookId) throws Exception {
         AddCartItemRequestDto addDto = new AddCartItemRequestDto(bookId, 1);
         mockMvc.perform(post("/cart")

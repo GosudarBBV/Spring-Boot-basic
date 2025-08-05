@@ -10,6 +10,7 @@ import book.shop.spring.boot.intro.model.ShoppingCart;
 import book.shop.spring.boot.intro.repository.BookRepository;
 import book.shop.spring.boot.intro.repository.CartItemRepository;
 import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
+import book.shop.spring.boot.intro.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +24,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private final CartItemRepository cartItemRepository;
     private final ShoppingCartMapper shoppingCartMapper;
     private final BookRepository bookRepository;
+    private final UserRepository userRepository;
 
     public ShoppingCartResponseDto addBookToCart(Long bookId, int quantity, Long userId) {
         ShoppingCart cart = shoppingCartRepository.findByUserId(userId)
-                .orElseThrow(()
-                        -> new EntityNotFoundException("Shopping cart not found for user id: "
-                        + userId));
+                .orElseGet(() -> {
+                    ShoppingCart newCart = new ShoppingCart();
+                    newCart.setUser(userRepository.getReferenceById(userId));
+                    return shoppingCartRepository.save(newCart);
+                });
 
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new EntityNotFoundException("Book not found: id = " + bookId));
