@@ -9,11 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
-import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
 import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.dto.CreateUserRequestDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
+import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -96,13 +96,12 @@ public class OrderControllerTest {
         return json.get("id").asLong();
     }
 
-    // Оновлений addBookToCart: відправляємо POST на /cart з JSON в тілі (DTO)
-    private void addBookToCart(Long bookId) throws Exception {
+    // Тепер addBookToCart приймає email, щоб додавати в кошик саме цього користувача
+    private void addBookToCart(String userEmail, Long bookId) throws Exception {
         AddCartItemRequestDto addDto = new AddCartItemRequestDto(bookId, 1);
-
         mockMvc.perform(post("/cart")
                         .with(csrf())
-                        .with(user(FAKE_USER_EMAIL).roles("USER"))
+                        .with(user(userEmail).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(addDto)))
                 .andExpect(status().isOk());
@@ -115,7 +114,7 @@ public class OrderControllerTest {
         createUser(email, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
 
-        addBookToCart(bookId);
+        addBookToCart(email, bookId);
 
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         mockMvc.perform(post("/orders")
@@ -135,7 +134,7 @@ public class OrderControllerTest {
         createUser(email, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
 
-        addBookToCart(bookId);
+        addBookToCart(email, bookId);
 
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         mockMvc.perform(post("/orders")
@@ -158,7 +157,7 @@ public class OrderControllerTest {
         createUser(email, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
 
-        addBookToCart(bookId);
+        addBookToCart(email, bookId);
 
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         String orderResponse = mockMvc.perform(post("/orders")
@@ -184,7 +183,7 @@ public class OrderControllerTest {
         createUser(email, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
 
-        addBookToCart(bookId);
+        addBookToCart(email, bookId);
 
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         String orderResponse = mockMvc.perform(post("/orders")
@@ -219,7 +218,7 @@ public class OrderControllerTest {
         String userEmail = "user@example.com";
         createUser(userEmail, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
-        addBookToCart(bookId);
+        addBookToCart(userEmail, bookId);
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         String orderResponse = mockMvc.perform(post("/orders")
                         .with(csrf())
