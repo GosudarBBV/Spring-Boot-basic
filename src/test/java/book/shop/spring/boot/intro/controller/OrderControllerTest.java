@@ -11,15 +11,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
-import book.shop.spring.boot.intro.model.*;
-import book.shop.spring.boot.intro.repository.*;
+import book.shop.spring.boot.intro.dto.CreateUserRequestDto;
+import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
-import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +30,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@Transactional
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 public class OrderControllerTest {
-
-    private static final String TEST_USER_EMAIL = "user@example.com";
-    private static final String TEST_ADMIN_EMAIL = "admin@example.com";
 
     @Autowired
     private MockMvc mockMvc;
@@ -46,104 +40,63 @@ public class OrderControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private ShoppingCartRepository shoppingCartRepository;
-
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private CartItemRepository cartItemRepository;
-
-    @Autowired
-    private EntityManager entityManager;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-
-    @BeforeEach
-    void cleanDatabase() {
-        cartItemRepository.deleteAll();
-        shoppingCartRepository.deleteAll();
-        orderRepository.deleteAll();
-        userRepository.deleteAll();
-        roleRepository.deleteAll();
-        bookRepository.deleteAll();
-
-        entityManager.flush();
-        entityManager.clear();
+    private Long createUser(String email, String password, String firstName, String lastName, String role) throws Exception {
+        CreateUserRequestDto userDto = new CreateUserRequestDto(email, password, firstName, lastName, role);
+        String response = mockMvc.perform(post("/users/register") // припустимо є ендпоінт реєстрації
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDto)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode json = objectMapper.readTree(response);
+        return json.get("id").asLong();
     }
 
-    private User createUserIfNotExist(String email, RoleName roleName, String password, String firstName, String lastName) {
-        Role role = roleRepository.findByName(roleName)
-                .orElseGet(() -> {
-                    Role r = new Role();
-                    r.setName(roleName);
-                    return roleRepository.save(r);
-                });
-        return userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    User u = new User();
-                    u.setEmail(email);
-                    u.setPassword("{noop}" + password);
-                    u.setFirstName(firstName);
-                    u.setLastName(lastName);
-                    u.setRoles(Set.of(role));
-                    return userRepository.save(u);
-                });
+    private Long createBook(String title, String author, double price) throws Exception {
+        CreateBookRequestDto bookDto = new CreateBookRequestDto(
+                title,
+                author,
+                null, // isbn
+                BigDecimal.valueOf(price),
+                null, // description
+                null, // coverImage
+                List.of() // порожній список категорій
+        );
+        String response = mockMvc.perform(post("/books")
+                        .with(csrf())
+                        .with(user("admin").roles("ADMIN")) // для створення книги потрібна роль ADMIN
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookDto)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode json = objectMapper.readTree(response);
+        return json.get("id").asLong();
     }
 
-    private void prepareTestDataForUser(User user) {
-        User managedUser = userRepository.findById(user.getId()).orElseThrow();
-
-        ShoppingCart cart = shoppingCartRepository.findByUserId(managedUser.getId())
-                .orElseGet(() -> {
-                    ShoppingCart c = new ShoppingCart();
-                    c.setUser(managedUser);
-                    return shoppingCartRepository.save(c);
-                });
-
-        Book book = bookRepository.findAll().stream().findFirst().orElseGet(() -> {
-            Book b = new Book();
-            b.setTitle("Test Book");
-            b.setAuthor("Test Author");
-            b.setPrice(BigDecimal.valueOf(100));
-            return bookRepository.save(b);
-        });
-
-        boolean cartItemExists = cartItemRepository.findAll().stream()
-                .anyMatch(ci -> ci.getShoppingCart().getId().equals(cart.getId())
-                        && ci.getBook().getId().equals(book.getId()));
-
-        if (!cartItemExists) {
-            CartItem cartItem = new CartItem();
-            cartItem.setShoppingCart(cart);
-            cartItem.setBook(book);
-            cartItem.setQuantity(1);
-            cartItemRepository.save(cartItem);
-        }
+    private void addBookToCart(String userEmail, Long bookId) throws Exception {
+        mockMvc.perform(post("/shopping-cart/add")
+                        .with(csrf())
+                        .with(user(userEmail).roles("USER"))
+                        .param("bookId", String.valueOf(bookId))
+                        .param("quantity", "1"))
+                .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Place order - success for USER role")
     void placeOrder_asUser_shouldReturnCreatedOrder() throws Exception {
-        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
-        prepareTestDataForUser(testUser);
+        String email = "user@example.com";
+        createUser(email, "password", "Test", "User", "USER");
+        Long bookId = createBook("Test Book", "Test Author", 100);
 
-        OrderRequestDto requestDto = new OrderRequestDto("123 Test St, Kyiv");
+        addBookToCart(email, bookId);
 
+        OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         mockMvc.perform(post("/orders")
                         .with(csrf())
-                        .with(user(TEST_USER_EMAIL).roles("USER"))
+                        .with(user(email).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
+                        .content(objectMapper.writeValueAsString(orderRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.shippingAddress").value("123 Test St, Kyiv"))
                 .andExpect(jsonPath("$.id").isNumber());
@@ -152,11 +105,23 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Get order history - success for USER role")
     void getOrderHistory_asUser_shouldReturnPagedOrders() throws Exception {
-        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
-        prepareTestDataForUser(testUser);
+        String email = "user@example.com";
+        createUser(email, "password", "Test", "User", "USER");
+        Long bookId = createBook("Test Book", "Test Author", 100);
+
+        addBookToCart(email, bookId);
+
+        // Place an order first, so there is some history
+        OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
+        mockMvc.perform(post("/orders")
+                        .with(csrf())
+                        .with(user(email).roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderRequest)))
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/orders")
-                        .with(user(TEST_USER_EMAIL).roles("USER")))
+                        .with(user(email).roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
@@ -164,11 +129,26 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Get order items - success for USER role")
     void getOrderItems_asUser_shouldReturnList() throws Exception {
-        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
-        prepareTestDataForUser(testUser);
+        String email = "user@example.com";
+        createUser(email, "password", "Test", "User", "USER");
+        Long bookId = createBook("Test Book", "Test Author", 100);
 
-        mockMvc.perform(get("/orders/1/items")
-                        .with(user(TEST_USER_EMAIL).roles("USER")))
+        addBookToCart(email, bookId);
+
+        // Place order to have order and items
+        OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
+        String orderResponse = mockMvc.perform(post("/orders")
+                        .with(csrf())
+                        .with(user(email).roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long orderId = objectMapper.readTree(orderResponse).get("id").asLong();
+
+        mockMvc.perform(get("/orders/" + orderId + "/items")
+                        .with(user(email).roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -176,45 +156,84 @@ public class OrderControllerTest {
     @Test
     @DisplayName("Get order item by ID - success for USER role")
     void getOrderItem_asUser_shouldReturnItem() throws Exception {
-        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
-        prepareTestDataForUser(testUser);
+        String email = "user@example.com";
+        createUser(email, "password", "Test", "User", "USER");
+        Long bookId = createBook("Test Book", "Test Author", 100);
 
-        mockMvc.perform(get("/orders/1/items/1")
-                        .with(user(TEST_USER_EMAIL).roles("USER")))
+        addBookToCart(email, bookId);
+
+        // Place order to get order and items
+        OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
+        String orderResponse = mockMvc.perform(post("/orders")
+                        .with(csrf())
+                        .with(user(email).roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long orderId = objectMapper.readTree(orderResponse).get("id").asLong();
+
+        // Get first item id from order items
+        String itemsResponse = mockMvc.perform(get("/orders/" + orderId + "/items")
+                        .with(user(email).roles("USER")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
+                .andReturn().getResponse().getContentAsString();
+
+        Long itemId = objectMapper.readTree(itemsResponse).get(0).get("id").asLong();
+
+        mockMvc.perform(get("/orders/" + orderId + "/items/" + itemId)
+                        .with(user(email).roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(itemId));
     }
 
     @Test
     @DisplayName("Update order status - success for ADMIN role")
     void updateOrderStatus_asAdmin_shouldUpdateStatus() throws Exception {
-        User testAdmin = createUserIfNotExist(TEST_ADMIN_EMAIL, RoleName.ADMIN, "adminpassword", "Admin", "User");
-        // Не обов’язково створювати кошик/книгу для цього тесту
+        String adminEmail = "admin@example.com";
+        createUser(adminEmail, "adminpassword", "Admin", "User", "ADMIN");
 
-        UpdateOrderStatusRequestDto requestDto = new UpdateOrderStatusRequestDto(OrderStatus.COMPLETED.name());
-
-        mockMvc.perform(patch("/orders/1")
+        // Для тесту оновлення статусу потрібне замовлення
+        // Створимо користувача, книгу, кошик і замовлення
+        String userEmail = "user@example.com";
+        createUser(userEmail, "password", "Test", "User", "USER");
+        Long bookId = createBook("Test Book", "Test Author", 100);
+        addBookToCart(userEmail, bookId);
+        OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
+        String orderResponse = mockMvc.perform(post("/orders")
                         .with(csrf())
-                        .with(user(TEST_ADMIN_EMAIL).roles("ADMIN"))
+                        .with(user(userEmail).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
+                        .content(objectMapper.writeValueAsString(orderRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long orderId = objectMapper.readTree(orderResponse).get("id").asLong();
+
+        UpdateOrderStatusRequestDto statusRequest = new UpdateOrderStatusRequestDto("COMPLETED");
+
+        mockMvc.perform(patch("/orders/" + orderId)
+                        .with(csrf())
+                        .with(user(adminEmail).roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(statusRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(OrderStatus.COMPLETED.name()));
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
 
     @Test
     @DisplayName("Update order status - forbidden for USER role")
     void updateOrderStatus_asUser_shouldBeForbidden() throws Exception {
-        User testUser = createUserIfNotExist(TEST_USER_EMAIL, RoleName.USER, "password", "Test", "User");
-        // Не обов’язково створювати кошик/книгу для цього тесту
+        String email = "user@example.com";
+        createUser(email, "password", "Test", "User", "USER");
 
-        UpdateOrderStatusRequestDto requestDto = new UpdateOrderStatusRequestDto(OrderStatus.COMPLETED.name());
+        UpdateOrderStatusRequestDto statusRequest = new UpdateOrderStatusRequestDto("COMPLETED");
 
         mockMvc.perform(patch("/orders/1")
                         .with(csrf())
-                        .with(user(TEST_USER_EMAIL).roles("USER"))
+                        .with(user(email).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
+                        .content(objectMapper.writeValueAsString(statusRequest)))
                 .andExpect(status().isForbidden());
     }
 }
