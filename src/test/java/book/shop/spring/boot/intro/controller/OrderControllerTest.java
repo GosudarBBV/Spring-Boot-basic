@@ -94,7 +94,7 @@ public class OrderControllerTest {
                     u.setFirstName("Test");
                     u.setLastName("User");
                     u.setRoles(Set.of(roleUser));
-                    return userRepository.save(u); // SAVE — зробить user managed
+                    return userRepository.save(u);
                 });
 
         testAdmin = userRepository.findByEmail(TEST_ADMIN_EMAIL)
@@ -108,18 +108,21 @@ public class OrderControllerTest {
                     return userRepository.save(u);
                 });
 
-        // Оновити testUser з бази, щоб бути впевненим, що це managed entity
+        // 3. Отримати testUser ще раз, щоб був точно managed
         testUser = userRepository.findById(testUser.getId()).orElseThrow();
 
-        // 3. Створити кошик
+        // 4. Створити або отримати кошик
         ShoppingCart cart = shoppingCartRepository.findByUserId(testUser.getId())
                 .orElseGet(() -> {
                     ShoppingCart c = new ShoppingCart();
-                    c.setUser(testUser); // Важливо: managed entity
+                    c.setUser(testUser); // Managed
                     return shoppingCartRepository.save(c);
                 });
 
-        // 4. Створити книгу
+        // Отримати cart як managed
+        cart = shoppingCartRepository.findById(cart.getId()).orElseThrow();
+
+        // 5. Створити або отримати книгу
         Book book = bookRepository.findAll().stream().findFirst().orElseGet(() -> {
             Book b = new Book();
             b.setTitle("Test Book");
@@ -128,15 +131,20 @@ public class OrderControllerTest {
             return bookRepository.save(b);
         });
 
-        // 5. Додати CartItem, якщо потрібно
+        // Отримати book як managed
+        book = bookRepository.findById(book.getId()).orElseThrow();
+
+        // 6. Додати CartItem, якщо ще не існує
+        ShoppingCart finalCart = cart;
+        Book finalBook = book;
         boolean cartItemExists = cartItemRepository.findAll().stream()
-                .anyMatch(ci -> ci.getShoppingCart().getId().equals(cart.getId())
-                        && ci.getBook().getId().equals(book.getId()));
+                .anyMatch(ci -> ci.getShoppingCart().getId().equals(finalCart.getId())
+                        && ci.getBook().getId().equals(finalBook.getId()));
 
         if (!cartItemExists) {
             CartItem cartItem = new CartItem();
-            cartItem.setShoppingCart(cart); // також managed entity
-            cartItem.setBook(book);
+            cartItem.setShoppingCart(cart); // Managed
+            cartItem.setBook(book);         // Managed
             cartItem.setQuantity(1);
             cartItemRepository.save(cartItem);
         }
