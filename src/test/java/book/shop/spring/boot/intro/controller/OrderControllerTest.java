@@ -13,13 +13,12 @@ import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.dto.CreateUserRequestDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
-import book.shop.spring.boot.intro.model.User;
-import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,18 +35,36 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(TestSecurityConfig.class)
 public class OrderControllerTest {
 
+    private static final String FAKE_USER_EMAIL = "fakeuser@example.com";
+
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
+    @BeforeEach
+    void setupFakeUser() throws Exception {
+        CreateUserRequestDto userDto = new CreateUserRequestDto(
+                FAKE_USER_EMAIL,
+                "password",
+                "password",
+                "Fake",
+                "User",
+                "USER"
+        );
+
+        // Створюємо fake user, якщо ще не створений
+        mockMvc.perform(post("/auth/registration")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDto)))
+                .andExpect(status().isOk());
+    }
 
     private Long createUser(String email, String password, String firstName, String lastName, String role) throws Exception {
         CreateUserRequestDto userDto = new CreateUserRequestDto(email, password, password, firstName, lastName, role);
-        String response = mockMvc.perform(post("/auth/registration") // виправлений URL для реєстрації
+        String response = mockMvc.perform(post("/auth/registration")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
@@ -61,15 +78,15 @@ public class OrderControllerTest {
         CreateBookRequestDto bookDto = new CreateBookRequestDto(
                 title,
                 author,
-                null, // isbn
+                null,
                 BigDecimal.valueOf(price),
-                null, // description
-                null, // coverImage
-                List.of() // порожній список категорій
+                null,
+                null,
+                List.of()
         );
         String response = mockMvc.perform(post("/books")
                         .with(csrf())
-                        .with(user("admin").roles("ADMIN")) // admin має бути в TestSecurityConfig
+                        .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookDto)))
                 .andExpect(status().isCreated())
@@ -78,20 +95,11 @@ public class OrderControllerTest {
         return json.get("id").asLong();
     }
 
-    private void addBookToCart(String userEmail, Long bookId) throws Exception {
-        String usernameForSecurity;
-
-        if ("fakeuser@example.com".equals(userEmail)) {
-            usernameForSecurity = "fakeuser@example.com";
-        } else {
-            User user = userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            usernameForSecurity = user.getEmail();
-        }
-
+    // addBookToCart ігнорує userEmail, завжди fake user
+    private void addBookToCart(Long bookId) throws Exception {
         mockMvc.perform(post("/shopping-cart/add")
                         .with(csrf())
-                        .with(user(usernameForSecurity).roles("USER"))
+                        .with(user(FAKE_USER_EMAIL).roles("USER"))
                         .param("bookId", String.valueOf(bookId))
                         .param("quantity", "1"))
                 .andExpect(status().isOk());
@@ -104,7 +112,7 @@ public class OrderControllerTest {
         createUser(email, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
 
-        addBookToCart(email, bookId);
+        addBookToCart(bookId);
 
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         mockMvc.perform(post("/orders")
@@ -124,7 +132,7 @@ public class OrderControllerTest {
         createUser(email, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
 
-        addBookToCart(email, bookId);
+        addBookToCart(bookId);
 
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         mockMvc.perform(post("/orders")
@@ -147,7 +155,7 @@ public class OrderControllerTest {
         createUser(email, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
 
-        addBookToCart(email, bookId);
+        addBookToCart(bookId);
 
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         String orderResponse = mockMvc.perform(post("/orders")
@@ -173,7 +181,7 @@ public class OrderControllerTest {
         createUser(email, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
 
-        addBookToCart(email, bookId);
+        addBookToCart(bookId);
 
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         String orderResponse = mockMvc.perform(post("/orders")
@@ -208,7 +216,7 @@ public class OrderControllerTest {
         String userEmail = "user@example.com";
         createUser(userEmail, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
-        addBookToCart(userEmail, bookId);
+        addBookToCart(bookId);
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         String orderResponse = mockMvc.perform(post("/orders")
                         .with(csrf())
