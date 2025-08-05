@@ -41,19 +41,12 @@ public class OrderControllerTest {
     private ObjectMapper objectMapper;
 
     private Long createUser(String email, String password, String firstName, String lastName, String role) throws Exception {
-        CreateUserRequestDto userDto = new CreateUserRequestDto(
-                email,
-                password,
-                password, // repeatPassword
-                firstName,
-                lastName,
-                role
-        );
-        String response = mockMvc.perform(post("/auth/registration")
+        CreateUserRequestDto userDto = new CreateUserRequestDto(email, password, password, firstName, lastName, role);
+        String response = mockMvc.perform(post("/auth/registration") // виправлений URL для реєстрації
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isOk()) // можеш замінити на .isCreated(), якщо твій контролер повертає 201
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         JsonNode json = objectMapper.readTree(response);
         return json.get("id").asLong();
@@ -63,18 +56,18 @@ public class OrderControllerTest {
         CreateBookRequestDto bookDto = new CreateBookRequestDto(
                 title,
                 author,
-                null,
+                null, // isbn
                 BigDecimal.valueOf(price),
-                null,
-                null,
-                List.of()
+                null, // description
+                null, // coverImage
+                List.of() // порожній список категорій
         );
         String response = mockMvc.perform(post("/books")
                         .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
+                        .with(user("admin").roles("ADMIN")) // admin має бути в TestSecurityConfig
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookDto)))
-                .andExpect(status().isCreated()) // Виправлено
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         JsonNode json = objectMapper.readTree(response);
         return json.get("id").asLong();
@@ -104,7 +97,7 @@ public class OrderControllerTest {
                         .with(user(email).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderRequest)))
-                .andExpect(status().isCreated()) // Виправлено
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.shippingAddress").value("123 Test St, Kyiv"))
                 .andExpect(jsonPath("$.id").isNumber());
     }
@@ -124,7 +117,7 @@ public class OrderControllerTest {
                         .with(user(email).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderRequest)))
-                .andExpect(status().isCreated()); // Виправлено
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/orders")
                         .with(user(email).roles("USER")))
@@ -147,7 +140,7 @@ public class OrderControllerTest {
                         .with(user(email).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderRequest)))
-                .andExpect(status().isCreated()) // Виправлено
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
         Long orderId = objectMapper.readTree(orderResponse).get("id").asLong();
@@ -173,7 +166,7 @@ public class OrderControllerTest {
                         .with(user(email).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderRequest)))
-                .andExpect(status().isCreated()) // Виправлено
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
         Long orderId = objectMapper.readTree(orderResponse).get("id").asLong();
@@ -207,7 +200,7 @@ public class OrderControllerTest {
                         .with(user(userEmail).roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderRequest)))
-                .andExpect(status().isCreated()) // Виправлено
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         Long orderId = objectMapper.readTree(orderResponse).get("id").asLong();
 
