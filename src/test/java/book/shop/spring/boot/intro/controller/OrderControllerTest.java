@@ -67,7 +67,7 @@ public class OrderControllerTest {
                         .with(user("admin").roles("ADMIN")) // admin має бути в TestSecurityConfig
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookDto)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         JsonNode json = objectMapper.readTree(response);
         return json.get("id").asLong();
