@@ -87,7 +87,7 @@ class OrderControllerTest {
         shoppingCartRepository.save(cart);
         shoppingCartRepository.flush();
 
-        // Додаємо одну книгу в корзину (через репозиторій)
+        // Додаємо одну книгу
         Book book = new Book();
         book.setTitle("Test Book");
         book.setAuthor("Test Author");
@@ -102,6 +102,10 @@ class OrderControllerTest {
         item.setShoppingCart(cart);
         cart.getCartItems().add(item);
         cartItemRepository.save(item);
+
+        // ВАЖЛИВО: Зберігаємо кошик повторно після додавання CartItem
+        shoppingCartRepository.save(cart);
+        shoppingCartRepository.flush();
 
         return userRepository.findById(savedUser.getId()).orElseThrow();
     }
