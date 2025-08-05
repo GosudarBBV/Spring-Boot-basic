@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.transaction.Transactional;
@@ -99,6 +100,7 @@ class OrderControllerTest {
         item.setBook(savedBook);
         item.setQuantity(1);
         item.setShoppingCart(cart);
+        cart.setCartItems(Set.of(item));
         cartItemRepository.save(item);
 
         return userRepository.findById(savedUser.getId()).orElseThrow();
