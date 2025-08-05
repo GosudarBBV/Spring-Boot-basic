@@ -42,7 +42,7 @@ public class OrderControllerTest {
 
     private Long createUser(String email, String password, String firstName, String lastName, String role) throws Exception {
         CreateUserRequestDto userDto = new CreateUserRequestDto(email, password, firstName, lastName, role);
-        String response = mockMvc.perform(post("/users/register") // припустимо є ендпоінт реєстрації
+        String response = mockMvc.perform(post("/auth/registration") // виправлений URL для реєстрації
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDto)))
@@ -64,7 +64,7 @@ public class OrderControllerTest {
         );
         String response = mockMvc.perform(post("/books")
                         .with(csrf())
-                        .with(user("admin").roles("ADMIN")) // для створення книги потрібна роль ADMIN
+                        .with(user("admin").roles("ADMIN")) // admin має бути в TestSecurityConfig
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookDto)))
                 .andExpect(status().isCreated())
@@ -111,7 +111,6 @@ public class OrderControllerTest {
 
         addBookToCart(email, bookId);
 
-        // Place an order first, so there is some history
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         mockMvc.perform(post("/orders")
                         .with(csrf())
@@ -135,7 +134,6 @@ public class OrderControllerTest {
 
         addBookToCart(email, bookId);
 
-        // Place order to have order and items
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         String orderResponse = mockMvc.perform(post("/orders")
                         .with(csrf())
@@ -162,7 +160,6 @@ public class OrderControllerTest {
 
         addBookToCart(email, bookId);
 
-        // Place order to get order and items
         OrderRequestDto orderRequest = new OrderRequestDto("123 Test St, Kyiv");
         String orderResponse = mockMvc.perform(post("/orders")
                         .with(csrf())
@@ -174,7 +171,6 @@ public class OrderControllerTest {
 
         Long orderId = objectMapper.readTree(orderResponse).get("id").asLong();
 
-        // Get first item id from order items
         String itemsResponse = mockMvc.perform(get("/orders/" + orderId + "/items")
                         .with(user(email).roles("USER")))
                 .andExpect(status().isOk())
@@ -194,8 +190,6 @@ public class OrderControllerTest {
         String adminEmail = "admin@example.com";
         createUser(adminEmail, "adminpassword", "Admin", "User", "ADMIN");
 
-        // Для тесту оновлення статусу потрібне замовлення
-        // Створимо користувача, книгу, кошик і замовлення
         String userEmail = "user@example.com";
         createUser(userEmail, "password", "Test", "User", "USER");
         Long bookId = createBook("Test Book", "Test Author", 100);
