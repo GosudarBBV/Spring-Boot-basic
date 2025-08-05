@@ -76,15 +76,15 @@ public class OrderControllerTest {
     }
 
     private void prepareTestDataForUser(User user) {
-        // Отримати або створити кошик
-        ShoppingCart cart = shoppingCartRepository.findByUserId(user.getId())
+        User managedUser = userRepository.findById(user.getId()).orElseThrow();
+
+        ShoppingCart cart = shoppingCartRepository.findByUserId(managedUser.getId())
                 .orElseGet(() -> {
                     ShoppingCart c = new ShoppingCart();
-                    c.setUser(user);
+                    c.setUser(managedUser);
                     return shoppingCartRepository.save(c);
                 });
 
-        // Отримати або створити книгу
         Book book = bookRepository.findAll().stream().findFirst().orElseGet(() -> {
             Book b = new Book();
             b.setTitle("Test Book");
@@ -93,7 +93,6 @@ public class OrderControllerTest {
             return bookRepository.save(b);
         });
 
-        // Додати CartItem, якщо немає
         boolean cartItemExists = cartItemRepository.findAll().stream()
                 .anyMatch(ci -> ci.getShoppingCart().getId().equals(cart.getId())
                         && ci.getBook().getId().equals(book.getId()));
