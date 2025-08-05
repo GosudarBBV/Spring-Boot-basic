@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,6 +70,7 @@ public class OrderControllerTest {
 
     @BeforeEach
     void setUp() {
+        // 1. Створити ролі, якщо їх немає
         Role roleUser = roleRepository.findByName(RoleName.USER)
                 .orElseGet(() -> {
                     Role r = new Role();
@@ -82,39 +85,41 @@ public class OrderControllerTest {
                     return roleRepository.save(r);
                 });
 
-        // 2. Створити тестового користувача з роллю USER
+        // 2. Створити тестового користувача
         testUser = userRepository.findByEmail(TEST_USER_EMAIL)
                 .orElseGet(() -> {
                     User u = new User();
                     u.setEmail(TEST_USER_EMAIL);
-                    u.setPassword("{noop}password"); // або як у тебе збережено
+                    u.setPassword("{noop}password");
                     u.setFirstName("Test");
                     u.setLastName("User");
-                    u.setRoles(new HashSet<>(Collections.singletonList(roleUser)));
+                    u.setRoles(Set.of(roleUser));
+                    return userRepository.save(u); // SAVE — зробить user managed
+                });
+
+        testAdmin = userRepository.findByEmail(TEST_ADMIN_EMAIL)
+                .orElseGet(() -> {
+                    User u = new User();
+                    u.setEmail(TEST_ADMIN_EMAIL);
+                    u.setPassword("{noop}adminpassword");
+                    u.setFirstName("Admin");
+                    u.setLastName("User");
+                    u.setRoles(Set.of(roleAdmin));
                     return userRepository.save(u);
                 });
 
-        // 3. Створити тестового адміністратора з роллю ADMIN
-        testAdmin = userRepository.findByEmail(TEST_ADMIN_EMAIL)
-                .orElseGet(() -> {
-                    User admin = new User();
-                    admin.setEmail(TEST_ADMIN_EMAIL);
-                    admin.setPassword("{noop}adminpassword");
-                    admin.setFirstName("Admin");
-                    admin.setLastName("User");
-                    admin.setRoles(new HashSet<>(Collections.singletonList(roleAdmin)));
-                    return userRepository.save(admin);
-                });
+        // Оновити testUser з бази, щоб бути впевненим, що це managed entity
+        testUser = userRepository.findById(testUser.getId()).orElseThrow();
 
-        // 4. Створити кошик для тестового користувача, якщо його нема
+        // 3. Створити кошик
         ShoppingCart cart = shoppingCartRepository.findByUserId(testUser.getId())
                 .orElseGet(() -> {
                     ShoppingCart c = new ShoppingCart();
-                    c.setUser(testUser);
+                    c.setUser(testUser); // Важливо: managed entity
                     return shoppingCartRepository.save(c);
                 });
 
-        // 5. Створити книгу, якщо її нема
+        // 4. Створити книгу
         Book book = bookRepository.findAll().stream().findFirst().orElseGet(() -> {
             Book b = new Book();
             b.setTitle("Test Book");
@@ -123,14 +128,14 @@ public class OrderControllerTest {
             return bookRepository.save(b);
         });
 
-        // 6. Перевірити, чи є хоча б один CartItem для цього кошика
-        boolean cartHasItems = cartItemRepository.findAll().stream()
-                .anyMatch(item -> item.getShoppingCart().getId().equals(cart.getId()));
+        // 5. Додати CartItem, якщо потрібно
+        boolean cartItemExists = cartItemRepository.findAll().stream()
+                .anyMatch(ci -> ci.getShoppingCart().getId().equals(cart.getId())
+                        && ci.getBook().getId().equals(book.getId()));
 
-        // Якщо немає — додати CartItem
-        if (!cartHasItems) {
+        if (!cartItemExists) {
             CartItem cartItem = new CartItem();
-            cartItem.setShoppingCart(cart);
+            cartItem.setShoppingCart(cart); // також managed entity
             cartItem.setBook(book);
             cartItem.setQuantity(1);
             cartItemRepository.save(cartItem);
