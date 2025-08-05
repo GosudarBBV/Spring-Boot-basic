@@ -16,6 +16,10 @@ import book.shop.spring.boot.intro.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.Set;
+
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +30,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
+@Transactional
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 public class OrderControllerTest {
@@ -55,6 +60,26 @@ public class OrderControllerTest {
 
     @Autowired
     private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+
+    @BeforeEach
+    void cleanDatabase() {
+        cartItemRepository.deleteAll();
+        shoppingCartRepository.deleteAll();
+        orderRepository.deleteAll();
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+        bookRepository.deleteAll();
+
+        entityManager.flush();
+        entityManager.clear();
+    }
 
     private User createUserIfNotExist(String email, RoleName roleName, String password, String firstName, String lastName) {
         Role role = roleRepository.findByName(roleName)
