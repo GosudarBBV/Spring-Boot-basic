@@ -14,7 +14,6 @@ import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.dto.CreateUserRequestDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
