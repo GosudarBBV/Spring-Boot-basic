@@ -12,17 +12,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
-import book.shop.spring.boot.intro.model.Order;
-import book.shop.spring.boot.intro.model.OrderStatus;
-import book.shop.spring.boot.intro.model.Role;
-import book.shop.spring.boot.intro.model.RoleName;
-import book.shop.spring.boot.intro.model.ShoppingCart;
-import book.shop.spring.boot.intro.model.User;
-import book.shop.spring.boot.intro.repository.OrderRepository;
-import book.shop.spring.boot.intro.repository.RoleRepository;
-import book.shop.spring.boot.intro.repository.ShoppingCartRepository;
-import book.shop.spring.boot.intro.repository.UserRepository;
+import book.shop.spring.boot.intro.model.*;
+import book.shop.spring.boot.intro.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -63,6 +57,12 @@ class OrderControllerTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private BookRepository bookRepository;
+
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
     private User createUser(String email, RoleName roleName) {
         Role role = roleRepository.findByName(roleName)
                 .orElseGet(() -> {
@@ -78,7 +78,6 @@ class OrderControllerTest {
         user.setLastName("User");
         user.setShippingAddress("Test Address");
         user.setRoles(Set.of(role));
-
         User savedUser = userRepository.save(user);
         userRepository.flush();
 
@@ -87,9 +86,22 @@ class OrderControllerTest {
         shoppingCartRepository.save(cart);
         shoppingCartRepository.flush();
 
-        savedUser = userRepository.findById(savedUser.getId()).orElseThrow();
+        // Додаємо одну книгу в корзину (через репозиторій)
+        Book book = new Book();
+        book.setTitle("Test Book");
+        book.setAuthor("Test Author");
+        book.setPrice(BigDecimal.valueOf(100));
+        book.setDescription("Test Description");
+        book.setCoverImage("test.jpg");
+        Book savedBook = bookRepository.save(book);
 
-        return savedUser;
+        CartItem item = new CartItem();
+        item.setBook(savedBook);
+        item.setQuantity(1);
+        item.setShoppingCart(cart);
+        cartItemRepository.save(item);
+
+        return userRepository.findById(savedUser.getId()).orElseThrow();
     }
 
     private Long createOrderForUser(User user, OrderRequestDto orderRequestDto) throws Exception {
