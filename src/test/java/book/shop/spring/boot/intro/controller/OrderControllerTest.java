@@ -13,6 +13,8 @@ import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.dto.CreateUserRequestDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
+import book.shop.spring.boot.intro.model.User;
+import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -39,6 +41,9 @@ public class OrderControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private Long createUser(String email, String password, String firstName, String lastName, String role) throws Exception {
         CreateUserRequestDto userDto = new CreateUserRequestDto(email, password, password, firstName, lastName, role);
@@ -74,9 +79,12 @@ public class OrderControllerTest {
     }
 
     private void addBookToCart(String userEmail, Long bookId) throws Exception {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         mockMvc.perform(post("/shopping-cart/add")
                         .with(csrf())
-                        .with(user(userEmail).roles("USER"))
+                        .with(user(user.getEmail()).roles("USER"))  // або з userDetailsService, якщо складна логіка
                         .param("bookId", String.valueOf(bookId))
                         .param("quantity", "1"))
                 .andExpect(status().isOk());
