@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
+import book.shop.spring.boot.intro.dto.AddCartItemRequestDto;
 import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
 import book.shop.spring.boot.intro.dto.CreateUserRequestDto;
@@ -95,13 +96,15 @@ public class OrderControllerTest {
         return json.get("id").asLong();
     }
 
-    // addBookToCart ігнорує userEmail, завжди fake user
+    // Оновлений addBookToCart: відправляємо POST на /cart з JSON в тілі (DTO)
     private void addBookToCart(Long bookId) throws Exception {
-        mockMvc.perform(post("/shopping-cart/add")
+        AddCartItemRequestDto addDto = new AddCartItemRequestDto(bookId, 1);
+
+        mockMvc.perform(post("/cart")
                         .with(csrf())
                         .with(user(FAKE_USER_EMAIL).roles("USER"))
-                        .param("bookId", String.valueOf(bookId))
-                        .param("quantity", "1"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(addDto)))
                 .andExpect(status().isOk());
     }
 
