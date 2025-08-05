@@ -100,7 +100,7 @@ class OrderControllerTest {
         item.setBook(savedBook);
         item.setQuantity(1);
         item.setShoppingCart(cart);
-        cart.setCartItems(Set.of(item));
+        cart.getCartItems().add(item);
         cartItemRepository.save(item);
 
         return userRepository.findById(savedUser.getId()).orElseThrow();
