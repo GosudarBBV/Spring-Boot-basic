@@ -166,7 +166,7 @@ class OrderControllerTest {
         User user = createUser("user3@example.com", RoleName.USER);
         Long orderId = createOrderForUser(user, new OrderRequestDto("Kyiv"));
 
-        mockMvc.perform(get("/orders/{orderId}/items", orderId, 1)
+        mockMvc.perform(get("/orders/{orderId}/items", orderId)
                         .with(user(user.getEmail()).roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());

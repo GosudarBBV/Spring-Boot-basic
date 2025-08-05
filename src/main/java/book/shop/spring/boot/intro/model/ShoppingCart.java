@@ -9,7 +9,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,10 +30,6 @@ public class ShoppingCart {
     private Set<CartItem> cartItems = new HashSet<>();
 
     public void clearCart() {
-        Iterator<CartItem> iterator = cartItems.iterator();
-        while (iterator.hasNext()) {
-            iterator.next();
-            iterator.remove();
-        }
+        cartItems.clear();
     }
 }
