@@ -31,15 +31,6 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Sql(scripts = {
-        "classpath:database/order-controllers/clear-order-items-data.sql"
-}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(scripts = {
-        "classpath:database/order-controllers/add-order-items-data.sql"
-}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(scripts = {
-        "classpath:database/order-controllers/clear-order-items-data.sql"
-}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @Import(TestSecurityConfig.class)
 class CategoryControllerTest {
 
