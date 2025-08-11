@@ -61,6 +61,8 @@ class OrderControllerTest {
         User user = new User();
         user.setEmail(username + "@example.com");
         user.setPassword("password");
+        user.setFirstName("Test");
+        user.setLastName("Test");
         return userRepository.save(user);
     }
 
