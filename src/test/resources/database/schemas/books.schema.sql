@@ -5,7 +5,9 @@ DROP TABLE IF EXISTS categories;
 
 CREATE TABLE categories (
     id BIGINT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE books (
