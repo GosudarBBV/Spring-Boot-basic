@@ -132,4 +132,31 @@ class javaorderold  {
                 .andExpect(jsonPath("$.id").value(orderId))
                 .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
+
+//    @Autowired
+//    private MockMvc mockMvc;
+//
+//    @Autowired
+//    private ObjectMapper objectMapper;
+//
+//    @Autowired
+//    private OrderService orderService;
+//
+//    @Autowired
+//    private UserService userService;
+//
+//    private Long placeOrderAndGetId(OrderRequestDto request) throws Exception {
+//        String response = mockMvc.perform(post("/orders")
+//                        .with(csrf())
+//                        .with(user("user").roles("USER"))
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(request)))
+//                .andExpect(status().isCreated())
+//                .andExpect(jsonPath("$.id").isNumber())
+//                .andReturn()
+//                .getResponse()
+//                .getContentAsString();
+//
+//        return objectMapper.readTree(response).get("id").asLong();
+//    }
 }
