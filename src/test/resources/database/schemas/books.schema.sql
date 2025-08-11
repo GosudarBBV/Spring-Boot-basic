@@ -4,14 +4,14 @@ DROP TABLE IF EXISTS books;
 DROP TABLE IF EXISTS categories;
 
 CREATE TABLE categories (
-    id BIGINT PRIMARY KEY,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE books (
-    id BIGINT PRIMARY KEY,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255),
     author VARCHAR(255),
     isbn VARCHAR(255),
