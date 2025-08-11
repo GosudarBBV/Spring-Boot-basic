@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: create-books-table
+      id: create-employee-table
       author: Bohdan Buhrak
       changes:
         - createTable:
@@ -16,19 +16,12 @@ databaseChangeLog:
               - column:
                   name: title
                   type: varchar(255)
-                  constraints:
-                    nullable: false
               - column:
                   name: author
                   type: varchar(255)
-                  constraints:
-                    nullable: false
               - column:
                   name: isbn
                   type: varchar(255)
-                  constraints:
-                    unique: true
-                    nullable: true
               - column:
                   name: price
                   type: decimal(10,2)
@@ -37,16 +30,12 @@ databaseChangeLog:
               - column:
                   name: description
                   type: varchar(1000)
-                  constraints:
-                    nullable: true
               - column:
                   name: cover_image
                   type: varchar(255)
-                  constraints:
-                    nullable: true
               - column:
                   name: is_deleted
-                  type: TINYINT(1)
+                  type: BIT
                   defaultValueBoolean: false
                   constraints:
                     nullable: false
