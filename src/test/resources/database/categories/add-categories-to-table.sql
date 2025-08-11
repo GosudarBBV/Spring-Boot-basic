@@ -1,2 +1,2 @@
-INSERT INTO categories (id, name, description) VALUES (1, 'Test a', 'Description for test a');
-INSERT INTO categories (id, name, description) VALUES (2, 'Test b', 'Description for test b');
+INSERT INTO categories (id, name) VALUES (1, 'Test a');
+INSERT INTO categories (id, name) VALUES (2, 'Test b');
