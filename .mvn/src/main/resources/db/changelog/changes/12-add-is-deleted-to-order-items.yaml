@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-is-deleted-to-order-items
+      author: Bohdan Buhrak
+      changes:
+        - addColumn:
+            tableName: order_items
+            columns:
+              - column:
+                  name: is_deleted
+                  type: BIT
+                  defaultValueBoolean: false

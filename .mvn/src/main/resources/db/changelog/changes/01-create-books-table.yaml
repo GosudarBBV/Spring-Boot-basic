@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-employee-table
+      author: Bohdan Buhrak
+      changes:
+        - createTable:
+            tableName: books
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+              - column:
+                  name: author
+                  type: varchar(255)
+              - column:
+                  name: isbn
+                  type: varchar(255)
+              - column:
+                  name: price
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: description
+                  type: varchar(1000)
+              - column:
+                  name: cover_image
+                  type: varchar(255)
+              - column:
+                  name: is_deleted
+                  type: BIT
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
