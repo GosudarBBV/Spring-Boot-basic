@@ -114,8 +114,14 @@ class OrderControllerTest {
         Order order = getOrderById(2L);
 
         List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
-        orderItems.forEach(oi -> oi.getBook().getId());
-        Book book = orderItems.get(0).getBook();
+
+        orderItems.forEach(oi -> {
+            if (oi.getBook() != null) {
+                oi.getBook().getId();
+            }
+        });
+
+        Book book = orderItems.isEmpty() ? null : orderItems.get(0).getBook();
 
         mockMvc.perform(get("/orders/" + order.getId() + "/items")
                         .with(user(user.getEmail()).roles("USER")))
@@ -131,8 +137,10 @@ class OrderControllerTest {
         Order order = getOrderById(3L);
         OrderItem orderItem = getOrderItemById(2L);
 
+        if (orderItem.getBook() != null) {
+            orderItem.getBook().getId();
+        }
         Book book = orderItem.getBook();
-        book.getId();
 
         mockMvc.perform(get("/orders/" + order.getId() + "/items/" + orderItem.getId())
                         .with(user(user.getEmail()).roles("USER")))

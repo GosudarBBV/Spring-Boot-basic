@@ -11,6 +11,7 @@ public record OrderResponseDto(
         List<OrderItemDto> orderItems,
         LocalDateTime orderDate,
         BigDecimal total,
-        OrderStatus status
+        OrderStatus status,
+        String shippingAddress
 ) {
 }
