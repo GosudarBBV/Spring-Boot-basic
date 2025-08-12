@@ -1,3 +1,5 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
 TRUNCATE TABLE order_items;
 TRUNCATE TABLE orders;
 TRUNCATE TABLE books_categories;
@@ -6,3 +8,5 @@ TRUNCATE TABLE categories;
 TRUNCATE TABLE users_roles;
 TRUNCATE TABLE roles;
 TRUNCATE TABLE users;
+
+SET FOREIGN_KEY_CHECKS = 1;
