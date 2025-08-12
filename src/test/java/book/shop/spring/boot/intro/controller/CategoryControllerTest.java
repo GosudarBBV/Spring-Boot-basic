@@ -58,7 +58,8 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Create category - success")
     void createCategory_ValidRequest_ReturnsCreatedCategory() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy", "Magical books");
+        CreateCategoryRequestDto request
+                = new CreateCategoryRequestDto("Fantasy", "Magical books");
 
         mockMvc.perform(post("/categories")
                         .with(csrf())
@@ -74,7 +75,8 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Get all categories - returns array")
     void getAllCategories_ReturnsList() throws Exception {
-        createCategoryAndGetId(new CreateCategoryRequestDto("Sample", "Sample description"));
+        createCategoryAndGetId(new CreateCategoryRequestDto("Sample",
+                "Sample description"));
 
         mockMvc.perform(get("/categories")
                         .with(user("user").roles("USER")))
@@ -86,7 +88,8 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Get category by ID - success")
     void getCategoryById_ReturnsCategory() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Sci-Fi", "Science fiction books");
+        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Sci-Fi",
+                "Science fiction books");
         Long id = createCategoryAndGetId(request);
 
         mockMvc.perform(get("/categories/{id}", id)
@@ -100,10 +103,13 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Update category - success")
     void updateCategory_ReturnsUpdatedCategory() throws Exception {
-        CreateCategoryRequestDto createRequest = new CreateCategoryRequestDto("History", "Historical books");
+        CreateCategoryRequestDto createRequest
+                = new CreateCategoryRequestDto("History", "Historical books");
         Long id = createCategoryAndGetId(createRequest);
 
-        CreateCategoryRequestDto updateRequest = new CreateCategoryRequestDto("Updated History", "Updated description");
+        CreateCategoryRequestDto updateRequest
+                = new CreateCategoryRequestDto("Updated History",
+                "Updated description");
 
         mockMvc.perform(put("/categories/{id}", id)
                         .with(csrf())
@@ -125,7 +131,8 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Delete category - success")
     void deleteCategory_ReturnsOk() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("To delete", "Description");
+        CreateCategoryRequestDto request
+                = new CreateCategoryRequestDto("To delete", "Description");
         Long id = createCategoryAndGetId(request);
 
         mockMvc.perform(delete("/categories/{id}", id)
@@ -141,7 +148,8 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Get books by category ID - success")
     void getBooksByCategory_ReturnsPagedBooks() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Category for books", "Description");
+        CreateCategoryRequestDto request
+                = new CreateCategoryRequestDto("Category for books", "Description");
         Long categoryId = createCategoryAndGetId(request);
 
         mockMvc.perform(get("/categories/by-category/{id}?page=0&size=10", categoryId)

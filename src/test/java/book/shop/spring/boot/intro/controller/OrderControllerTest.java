@@ -11,20 +11,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.OrderRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateOrderStatusRequestDto;
-import book.shop.spring.boot.intro.model.Book;
 import book.shop.spring.boot.intro.model.Order;
-import book.shop.spring.boot.intro.model.OrderItem;
-import book.shop.spring.boot.intro.model.OrderStatus;
 import book.shop.spring.boot.intro.model.User;
-import book.shop.spring.boot.intro.repository.BookRepository;
-import book.shop.spring.boot.intro.repository.OrderItemRepository;
 import book.shop.spring.boot.intro.repository.OrderRepository;
 import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
