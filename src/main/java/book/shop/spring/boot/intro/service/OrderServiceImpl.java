@@ -40,10 +40,11 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = prepareOrder(cart, shippingAddress);
         Set<OrderItem> orderItems = mapCartItemsToOrderItems(cart.getCartItems(), order);
+
+        order.setOrderItems(orderItems);
         BigDecimal total = calculateTotal(orderItems);
 
         order.setTotal(total);
-
         orderRepository.save(order);
         cart.clearCart();
         shoppingCartRepository.save(cart);
@@ -86,6 +87,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found: id = " + orderId));
         order.setStatus(status);
+        orderRepository.save(order);
         return orderMapper.toDto(order);
     }
 
