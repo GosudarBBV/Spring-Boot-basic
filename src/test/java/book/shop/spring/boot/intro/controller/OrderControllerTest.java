@@ -112,7 +112,10 @@ class OrderControllerTest {
     void getItems_ShouldReturnItems() throws Exception {
         User user = getUserByEmail("itemsUser@example.com");
         Order order = getOrderById(2L);
-        Book book = getBookByTitle("Test Book");
+
+        List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
+        orderItems.forEach(oi -> oi.getBook().getId());
+        Book book = orderItems.get(0).getBook();
 
         mockMvc.perform(get("/orders/" + order.getId() + "/items")
                         .with(user(user.getEmail()).roles("USER")))
@@ -126,8 +129,10 @@ class OrderControllerTest {
     void getItem_ShouldReturnSpecificItem() throws Exception {
         User user = getUserByEmail("specificItemUser@example.com");
         Order order = getOrderById(3L);
-        Book book = getBookByTitle("Specific Book");
         OrderItem orderItem = getOrderItemById(2L);
+
+        Book book = orderItem.getBook();
+        book.getId();
 
         mockMvc.perform(get("/orders/" + order.getId() + "/items/" + orderItem.getId())
                         .with(user(user.getEmail()).roles("USER")))
