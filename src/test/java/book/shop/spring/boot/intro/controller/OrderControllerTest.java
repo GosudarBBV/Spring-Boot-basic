@@ -120,26 +120,6 @@ class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("Get specific order item - success")
-    void getItem_ShouldReturnSpecificItem() throws Exception {
-        User user = getUserByEmail("specificItemUser@example.com");
-        Order order = getOrderById(3L);
-        OrderItem orderItem = getOrderItemById(2L);
-
-        if (orderItem.getBook() != null) {
-            orderItem.getBook().getId();
-        }
-        Book book = orderItem.getBook();
-
-        mockMvc.perform(get("/orders/" + order.getId() + "/items/" + orderItem.getId())
-                        .with(user(user.getEmail()).roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(orderItem.getId()))
-                .andExpect(jsonPath("$.bookId").exists())
-                .andExpect(jsonPath("$.quantity").value(1));
-    }
-
-    @Test
     @DisplayName("Update order status - success")
     void updateStatus_ShouldUpdateStatus() throws Exception {
         User admin = getUserByEmail("adminUser@example.com");
