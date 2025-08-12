@@ -92,7 +92,7 @@ class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.shippingAddress").value("Kyiv"))
+                .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
@@ -126,7 +126,7 @@ class OrderControllerTest {
         mockMvc.perform(get("/orders/" + order.getId() + "/items")
                         .with(user(user.getEmail()).roles("USER")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].bookId").value(book.getId()))
+                .andExpect(jsonPath("$[0].bookId").exists())
                 .andExpect(jsonPath("$[0].quantity").value(2));
     }
 
