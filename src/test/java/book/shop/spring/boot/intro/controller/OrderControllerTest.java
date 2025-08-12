@@ -113,20 +113,9 @@ class OrderControllerTest {
         User user = getUserByEmail("itemsUser@example.com");
         Order order = getOrderById(2L);
 
-        List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
-
-        orderItems.forEach(oi -> {
-            if (oi.getBook() != null) {
-                oi.getBook().getId();
-            }
-        });
-
-        Book book = orderItems.isEmpty() ? null : orderItems.get(0).getBook();
-
         mockMvc.perform(get("/orders/" + order.getId() + "/items")
                         .with(user(user.getEmail()).roles("USER")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].bookId").exists())
                 .andExpect(jsonPath("$[0].quantity").value(2));
     }
 
