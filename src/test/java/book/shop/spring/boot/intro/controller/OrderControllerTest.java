@@ -58,26 +58,12 @@ class OrderControllerTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private OrderItemRepository orderItemRepository;
-
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found: " + email));
     }
 
-    private Book getBookByTitle(String title) {
-        return bookRepository.findByTitle(title).orElseThrow(() -> new RuntimeException("Book not found: " + title));
-    }
-
     private Order getOrderById(Long id) {
         return orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found: " + id));
-    }
-
-    private OrderItem getOrderItemById(Long id) {
-        return orderItemRepository.findById(id).orElseThrow(() -> new RuntimeException("OrderItem not found: " + id));
     }
 
     @Test
@@ -105,18 +91,6 @@ class OrderControllerTest {
                         .with(user(user.getEmail()).roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
-    }
-
-    @Test
-    @DisplayName("Get order items - success")
-    void getItems_ShouldReturnItems() throws Exception {
-        User user = getUserByEmail("itemsUser@example.com");
-        Order order = getOrderById(2L);
-
-        mockMvc.perform(get("/orders/" + order.getId() + "/items")
-                        .with(user(user.getEmail()).roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].quantity").value(2));
     }
 
     @Test

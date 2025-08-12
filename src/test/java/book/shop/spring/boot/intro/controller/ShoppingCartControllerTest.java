@@ -20,12 +20,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
+@Sql(scripts = {
+        "classpath:database/test/schema-cart.sql",
+        "classpath:database/test/data-cart.sql"
+}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = {
+        "classpath:database/test/truncate-cart.sql"
+}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class ShoppingCartControllerTest {
 
     @Autowired
@@ -37,11 +45,11 @@ class ShoppingCartControllerTest {
     @Test
     @DisplayName("Add book to cart returns updated cart")
     void addBookToCart_ValidRequest_ReturnsCart() throws Exception {
-        AddCartItemRequestDto request = new AddCartItemRequestDto(2L, 3);
+        AddCartItemRequestDto request = new AddCartItemRequestDto(1L, 3);
 
         mockMvc.perform(post("/cart")
                         .with(csrf())
-                        .with(user("user").roles("USER"))
+                        .with(user("testuser@example.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
@@ -51,19 +59,19 @@ class ShoppingCartControllerTest {
     @DisplayName("Get current user's cart returns shopping cart")
     void getShoppingCart_ReturnsCart() throws Exception {
         mockMvc.perform(get("/cart")
-                        .with(user("user").roles("USER")))
+                        .with(user("testuser@example.com").roles("USER")))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Update cart item returns updated cart")
     void updateCartItem_ValidRequest_ReturnsCart() throws Exception {
-        Long cartItemId = 200L;
+        Long cartItemId = 1L;
         UpdateCartItemRequestDto request = new UpdateCartItemRequestDto(5);
 
         mockMvc.perform(put("/cart/items/{cartItemId}", cartItemId)
                         .with(csrf())
-                        .with(user("user").roles("USER"))
+                        .with(user("testuser@example.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
@@ -72,11 +80,11 @@ class ShoppingCartControllerTest {
     @Test
     @DisplayName("Delete cart item returns 204 No Content")
     void deleteCartItem_ValidRequest_ReturnsNoContent() throws Exception {
-        Long cartItemId = 300L;
+        Long cartItemId = 1L;
 
         mockMvc.perform(delete("/cart/items/{cartItemId}", cartItemId)
                         .with(csrf())
-                        .with(user("user").roles("USER")))
+                        .with(user("testuser@example.com").roles("USER")))
                 .andExpect(status().isNoContent());
     }
 }
