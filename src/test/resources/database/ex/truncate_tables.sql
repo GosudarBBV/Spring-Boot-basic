@@ -1,0 +1,8 @@
+TRUNCATE TABLE order_items;
+TRUNCATE TABLE orders;
+TRUNCATE TABLE books_categories;
+TRUNCATE TABLE books;
+TRUNCATE TABLE categories;
+TRUNCATE TABLE users_roles;
+TRUNCATE TABLE roles;
+TRUNCATE TABLE users;

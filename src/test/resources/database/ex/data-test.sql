@@ -30,7 +30,7 @@ INSERT INTO users_roles (user_id, role_id) VALUES
 INSERT INTO categories (id, name, description, is_deleted) VALUES
 (1, 'Fiction', 'Works of imaginative narration', FALSE),
 (2, 'Science', 'Books covering scientific topics', FALSE),
-(3, 'History', 'Historical events and analysis', FALSE);
+(3, 'HistoryBase', 'Historical events and analysis', FALSE);
 
 -- =========================
 -- BOOKS
