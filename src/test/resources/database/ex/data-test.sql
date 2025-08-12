@@ -49,9 +49,10 @@ INSERT INTO order_items (id, order_id, book_id, quantity, price, is_deleted) VAL
 (2, 3, 2, 1, 25.00, FALSE);
 
 -- SHOPPING_CARTS
-INSERT INTO shopping_carts (id, user_id, is_deleted) VALUES
-(1, 1, FALSE);
+INSERT INTO shopping_carts (id, user_id)
+VALUES (1, 1);
 
 -- CART_ITEMS
-INSERT INTO cart_items (id, shopping_cart_id, book_id, quantity, is_deleted) VALUES
-(1, 1, 1, 1, FALSE);
+INSERT INTO cart_items (id, shopping_cart_id, book_id, quantity)
+VALUES (1, 1, 1, 2),
+       (2, 1, 2, 1);

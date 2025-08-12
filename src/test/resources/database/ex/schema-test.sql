@@ -77,3 +77,20 @@ CREATE TABLE IF NOT EXISTS order_items (
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
+
+-- SHOPPING_CARTS
+CREATE TABLE shopping_carts (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    CONSTRAINT fk_shopping_carts_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- CART_ITEMS
+CREATE TABLE cart_items (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    shopping_cart_id BIGINT NOT NULL,
+    book_id BIGINT NOT NULL,
+    quantity INT NOT NULL,
+    CONSTRAINT fk_cart_items_cart FOREIGN KEY (shopping_cart_id) REFERENCES shopping_carts(id),
+    CONSTRAINT fk_cart_items_book FOREIGN KEY (book_id) REFERENCES books(id)
+);
