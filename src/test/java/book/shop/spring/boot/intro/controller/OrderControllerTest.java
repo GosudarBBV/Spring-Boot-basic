@@ -23,6 +23,8 @@ import book.shop.spring.boot.intro.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,6 +88,31 @@ class OrderControllerTest {
         return orderRepository.save(order);
     }
 
+    private OrderItem createOrderItem(Order order, Book book, int quantity) {
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setBook(book);
+        orderItem.setQuantity(quantity);
+        orderItem.setPrice(book.getPrice());  // обов’язкове поле
+        OrderItem savedItem = orderItemRepository.save(orderItem);
+
+        // Після додавання товару оновлюємо total замовлення
+        updateOrderTotal(order);
+
+        return savedItem;
+    }
+
+    private Order updateOrderTotal(Order order) {
+        List<OrderItem> items = orderItemRepository.findAllByOrderId(order.getId());
+
+        BigDecimal total = items.stream()
+                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        order.setTotal(total);
+        return orderRepository.save(order);
+    }
+
     @Test
     @DisplayName("Create order - success")
     void placeOrder_ValidRequest_ReturnsCreatedOrder() throws Exception {
@@ -121,11 +148,7 @@ class OrderControllerTest {
         Order order = createOrder(user, "Odessa");
         Book book = createBook("Test Book");
 
-        OrderItem orderItem = new OrderItem();
-        orderItem.setOrder(order);
-        orderItem.setBook(book);
-        orderItem.setQuantity(2);
-        orderItemRepository.save(orderItem);
+        createOrderItem(order, book, 2);  // Оновлено — через метод
 
         mockMvc.perform(get("/orders/" + order.getId() + "/items")
                         .with(user(user.getEmail()).roles("USER")))
@@ -141,11 +164,7 @@ class OrderControllerTest {
         Order order = createOrder(user, "Dnipro");
         Book book = createBook("Specific Book");
 
-        OrderItem orderItem = new OrderItem();
-        orderItem.setOrder(order);
-        orderItem.setBook(book);
-        orderItem.setQuantity(1);
-        orderItemRepository.save(orderItem);
+        OrderItem orderItem = createOrderItem(order, book, 1);  // Оновлено — через метод
 
         mockMvc.perform(get("/orders/" + order.getId() + "/items/" + orderItem.getId())
                         .with(user(user.getEmail()).roles("USER")))
