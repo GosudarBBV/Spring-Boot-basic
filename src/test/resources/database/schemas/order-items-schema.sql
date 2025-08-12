@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     book_id BIGINT NOT NULL,
     quantity INT NOT NULL,
     price DECIMAL(10,2),
+    is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
