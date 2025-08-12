@@ -40,6 +40,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
+@Sql(scripts = {"classpath:database/ex/schema-test.sql", "classpath:database/ex/data-test.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class OrderControllerTest {
 
     @Autowired
@@ -60,63 +61,26 @@ class OrderControllerTest {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
-    private User createUser(String username) {
-        User user = new User();
-        user.setEmail(username + "@example.com");
-        user.setPassword("password");
-        user.setFirstName("Test");
-        user.setLastName("Test");
-        return userRepository.save(user);
+    private User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found: " + email));
     }
 
-    private Book createBook(String title) {
-        Book book = new Book();
-        book.setTitle(title);
-        book.setAuthor("Author");
-        book.setIsbn("1234567890");
-        book.setPrice(BigDecimal.valueOf(20.00));
-        return bookRepository.save(book);
+    private Book getBookByTitle(String title) {
+        return bookRepository.findByTitle(title).orElseThrow(() -> new RuntimeException("Book not found: " + title));
     }
 
-    private Order createOrder(User user, String address) {
-        Order order = new Order();
-        order.setUser(user);
-        order.setShippingAddress(address);
-        order.setStatus(OrderStatus.PENDING);
-        order.setOrderDate(LocalDateTime.now());
-        order.setTotal(BigDecimal.ZERO);
-        return orderRepository.save(order);
+    private Order getOrderById(Long id) {
+        return orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found: " + id));
     }
 
-    private OrderItem createOrderItem(Order order, Book book, int quantity) {
-        OrderItem orderItem = new OrderItem();
-        orderItem.setOrder(order);
-        orderItem.setBook(book);
-        orderItem.setQuantity(quantity);
-        orderItem.setPrice(book.getPrice());  // обов’язкове поле
-        OrderItem savedItem = orderItemRepository.save(orderItem);
-
-        // Після додавання товару оновлюємо total замовлення
-        updateOrderTotal(order);
-
-        return savedItem;
-    }
-
-    private Order updateOrderTotal(Order order) {
-        List<OrderItem> items = orderItemRepository.findAllByOrderId(order.getId());
-
-        BigDecimal total = items.stream()
-                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        order.setTotal(total);
-        return orderRepository.save(order);
+    private OrderItem getOrderItemById(Long id) {
+        return orderItemRepository.findById(id).orElseThrow(() -> new RuntimeException("OrderItem not found: " + id));
     }
 
     @Test
     @DisplayName("Create order - success")
     void placeOrder_ValidRequest_ReturnsCreatedOrder() throws Exception {
-        User user = createUser("testuser");
+        User user = getUserByEmail("testuser@example.com");
         OrderRequestDto requestDto = new OrderRequestDto("Kyiv");
 
         mockMvc.perform(post("/orders")
@@ -132,8 +96,7 @@ class OrderControllerTest {
     @Test
     @DisplayName("Get order history - success")
     void getOrderHistory_ShouldReturnPage() throws Exception {
-        User user = createUser("historyUser");
-        createOrder(user, "Lviv");
+        User user = getUserByEmail("historyUser@example.com");
 
         mockMvc.perform(get("/orders")
                         .with(user(user.getEmail()).roles("USER")))
@@ -144,11 +107,9 @@ class OrderControllerTest {
     @Test
     @DisplayName("Get order items - success")
     void getItems_ShouldReturnItems() throws Exception {
-        User user = createUser("itemsUser");
-        Order order = createOrder(user, "Odessa");
-        Book book = createBook("Test Book");
-
-        createOrderItem(order, book, 2);  // Оновлено — через метод
+        User user = getUserByEmail("itemsUser@example.com");
+        Order order = getOrderById(2L);
+        Book book = getBookByTitle("Test Book");
 
         mockMvc.perform(get("/orders/" + order.getId() + "/items")
                         .with(user(user.getEmail()).roles("USER")))
@@ -160,11 +121,10 @@ class OrderControllerTest {
     @Test
     @DisplayName("Get specific order item - success")
     void getItem_ShouldReturnSpecificItem() throws Exception {
-        User user = createUser("specificItemUser");
-        Order order = createOrder(user, "Dnipro");
-        Book book = createBook("Specific Book");
-
-        OrderItem orderItem = createOrderItem(order, book, 1);  // Оновлено — через метод
+        User user = getUserByEmail("specificItemUser@example.com");
+        Order order = getOrderById(3L);
+        Book book = getBookByTitle("Specific Book");
+        OrderItem orderItem = getOrderItemById(2L);
 
         mockMvc.perform(get("/orders/" + order.getId() + "/items/" + orderItem.getId())
                         .with(user(user.getEmail()).roles("USER")))
@@ -177,8 +137,8 @@ class OrderControllerTest {
     @Test
     @DisplayName("Update order status - success")
     void updateStatus_ShouldUpdateStatus() throws Exception {
-        User admin = createUser("adminUser");
-        Order order = createOrder(admin, "Kharkiv");
+        User admin = getUserByEmail("adminUser@example.com");
+        Order order = getOrderById(4L);
 
         UpdateOrderStatusRequestDto request = new UpdateOrderStatusRequestDto("PENDING");
 
