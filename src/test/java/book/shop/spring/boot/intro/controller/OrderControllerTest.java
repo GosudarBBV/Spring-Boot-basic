@@ -31,9 +31,9 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-@Sql(scripts = {"classpath:database/ex/schema-test.sql", "classpath:database/ex/data-test.sql"},
+@Sql(scripts = {"classpath:database/controllers/schema-test.sql", "classpath:database/controllers/data-test.sql"},
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(scripts = {"classpath:database/ex/truncate_tables.sql"},
+@Sql(scripts = {"classpath:database/controllers/truncate_tables.sql"},
         executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class OrderControllerTest {
 
