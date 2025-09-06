@@ -1,0 +1,52 @@
+name: Spring Boot Test & Coverage
+
+# Trigger workflow on push or pull request to the specific branch
+on:
+  push:
+    branches: [ spring_boot_add_junit_tests ]
+  pull_request:
+    branches: [ spring_boot_add_junit_tests ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Set up JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Cache Maven dependencies to speed up builds
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # 4. Build project and run tests with JaCoCo coverage
+      - name: Build and run tests with JaCoCo
+        run: mvn clean test jacoco:report
+
+      # 5. Upload JaCoCo HTML report as an artifact
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: target/site/jacoco
+
+      # 6. (Optional) Upload coverage to Codecov for badge
+      # Requires Codecov token added to GitHub Secrets
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: target/site/jacoco/jacoco.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
