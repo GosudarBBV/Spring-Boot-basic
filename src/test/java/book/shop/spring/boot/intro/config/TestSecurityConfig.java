@@ -30,7 +30,7 @@ public class TestSecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails user = User.withUsername("user")
-                .password("{noop}password") // `{noop}` означає без шифрування
+                .password("{noop}password")
                 .roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(user);

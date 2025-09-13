@@ -26,7 +26,6 @@ public class FakeUserService implements UserService {
 
     @Override
     public void deleteById(Long id) {
-        // no-op for test
     }
 
     @Override
@@ -36,6 +35,5 @@ public class FakeUserService implements UserService {
 
     @Override
     public void createShoppingCart(User user) {
-        // no-op for test
     }
 }
