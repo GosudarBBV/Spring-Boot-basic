@@ -32,7 +32,13 @@ public class TestSecurityConfig {
                 .password("{noop}password")
                 .roles("USER")
                 .build();
-        return new InMemoryUserDetailsManager(user);
+
+        UserDetails admin = User.withUsername("admin")
+                .password("{noop}password")
+                .roles("ADMIN")
+                .build();
+
+        return new InMemoryUserDetailsManager(user, admin);
     }
 
     @Bean
