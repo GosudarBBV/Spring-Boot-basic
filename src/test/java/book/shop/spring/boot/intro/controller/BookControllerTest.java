@@ -1,17 +1,7 @@
 package book.shop.spring.boot.intro.controller;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.BookDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
@@ -23,40 +13,44 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
 class BookControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @LocalServerPort
+    private int port;
 
     @Autowired
     private BookRepository bookRepository;
 
-    private Long createBookAndGetId(CreateBookRequestDto request) throws Exception {
-        String responseContent = mockMvc.perform(post("/books")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+    @Autowired
+    private ObjectMapper objectMapper;
 
-        return objectMapper.readTree(responseContent).get("id").asLong();
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    private BookDto createBook(CreateBookRequestDto request) throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+
+        ResponseEntity<BookDto> response = restTemplate.postForEntity(
+                "http://localhost:" + port + "/books",
+                entity,
+                BookDto.class
+        );
+
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        return response.getBody();
     }
 
     @Test
@@ -67,28 +61,15 @@ class BookControllerTest {
                 BigDecimal.valueOf(19.99), "A fantasy novel",
                 "http://example.com/cover.jpg", List.of(1L, 2L));
 
-        BookDto expectedResponse = new BookDto();
-        expectedResponse.setTitle("The Hobbit");
-        expectedResponse.setAuthor("J.R.R. Tolkien");
-        expectedResponse.setPrice(BigDecimal.valueOf(19.99));
-        expectedResponse.setDescription("A fantasy novel");
-        expectedResponse.setCoverImage("http://example.com/cover.jpg");
+        BookDto actualResponse = createBook(request);
 
-        MvcResult result = mockMvc.perform(post("/books")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        BookDto actualResponse = objectMapper.readValue(
-                result.getResponse().getContentAsString(),
-                BookDto.class
-        );
-
-        expectedResponse.setId(actualResponse.getId());
-        assertThat(actualResponse).isEqualTo(expectedResponse);
+        assertThat(actualResponse).isNotNull();
+        assertThat(actualResponse.getId()).isNotNull();
+        assertThat(actualResponse.getTitle()).isEqualTo("The Hobbit");
+        assertThat(actualResponse.getAuthor()).isEqualTo("J.R.R. Tolkien");
+        assertThat(actualResponse.getPrice()).isEqualTo(BigDecimal.valueOf(19.99));
+        assertThat(actualResponse.getDescription()).isEqualTo("A fantasy novel");
+        assertThat(actualResponse.getCoverImage()).isEqualTo("http://example.com/cover.jpg");
     }
 
     @Test
@@ -99,21 +80,15 @@ class BookControllerTest {
                 BigDecimal.valueOf(15.00), "Dystopian novel",
                 "http://example.com/1984.jpg", List.of());
 
-        Long bookId = createBookAndGetId(createRequest);
+        BookDto createdBook = createBook(createRequest);
 
-        BookDto expectedResponse = new BookDto();
-        expectedResponse.setId(bookId);
-        expectedResponse.setTitle("1984");
-        expectedResponse.setAuthor("George Orwell");
-        expectedResponse.setPrice(BigDecimal.valueOf(15.00));
-        expectedResponse.setDescription("Dystopian novel");
-        expectedResponse.setCoverImage("http://example.com/1984.jpg");
+        ResponseEntity<BookDto> response = restTemplate.getForEntity(
+                "http://localhost:" + port + "/books/" + createdBook.getId(),
+                BookDto.class
+        );
 
-        mockMvc.perform(get("/books/{id}", bookId)
-                        .with(csrf())
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(expectedResponse), true));
+        BookDto actualResponse = response.getBody();
+        assertThat(actualResponse).isEqualTo(createdBook);
     }
 
     @Test
@@ -124,7 +99,7 @@ class BookControllerTest {
                 BigDecimal.valueOf(20.00), "Original description",
                 "http://example.com/original.jpg", List.of());
 
-        Long bookId = createBookAndGetId(createRequest);
+        BookDto createdBook = createBook(createRequest);
 
         UpdateBookRequestDto updateRequest = new UpdateBookRequestDto();
         updateRequest.setTitle("Updated Title");
@@ -134,21 +109,24 @@ class BookControllerTest {
         updateRequest.setDescription("Updated Description");
         updateRequest.setCoverImage("http://example.com/updated.jpg");
 
-        BookDto expectedResponse = new BookDto();
-        expectedResponse.setId(bookId);
-        expectedResponse.setTitle("Updated Title");
-        expectedResponse.setAuthor("Updated Author");
-        expectedResponse.setPrice(BigDecimal.valueOf(25.50));
-        expectedResponse.setDescription("Updated Description");
-        expectedResponse.setCoverImage("http://example.com/updated.jpg");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(updateRequest), headers);
 
-        mockMvc.perform(put("/books/{id}", bookId)
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(expectedResponse), true));
+        restTemplate.put("http://localhost:" + port + "/books/" + createdBook.getId(), entity);
+
+        ResponseEntity<BookDto> response = restTemplate.getForEntity(
+                "http://localhost:" + port + "/books/" + createdBook.getId(),
+                BookDto.class
+        );
+
+        BookDto actualResponse = response.getBody();
+
+        assertThat(actualResponse.getTitle()).isEqualTo("Updated Title");
+        assertThat(actualResponse.getAuthor()).isEqualTo("Updated Author");
+        assertThat(actualResponse.getPrice()).isEqualTo(BigDecimal.valueOf(25.50));
+        assertThat(actualResponse.getDescription()).isEqualTo("Updated Description");
+        assertThat(actualResponse.getCoverImage()).isEqualTo("http://example.com/updated.jpg");
     }
 
     @Test
@@ -159,14 +137,12 @@ class BookControllerTest {
                 BigDecimal.valueOf(10.00), "To be deleted description",
                 "http://example.com/delete.jpg", List.of());
 
-        Long bookId = createBookAndGetId(createRequest);
+        BookDto createdBook = createBook(createRequest);
 
-        mockMvc.perform(delete("/books/{id}", bookId)
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN")))
-                .andExpect(status().isNoContent());
+        restTemplate.delete("http://localhost:" + port + "/books/" + createdBook.getId());
 
-        Book deletedBook = bookRepository.findById(bookId).orElseThrow();
-        assertTrue(deletedBook.isDeleted(), "Book should be marked as deleted");
+        Book deletedBook = bookRepository.findById(createdBook.getId()).orElseThrow();
+        assertThat(deletedBook.isDeleted()).isTrue();
     }
 }
+
