@@ -2,6 +2,7 @@ package book.shop.spring.boot.intro.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.BookDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
@@ -14,16 +15,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 class BookControllerTest {
 
     @LocalServerPort
@@ -35,19 +38,17 @@ class BookControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     private BookDto createBook(CreateBookRequestDto request) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
 
-        ResponseEntity<BookDto> response = restTemplate.postForEntity(
-                "http://localhost:" + port + "/books",
-                entity,
-                BookDto.class
-        );
+        ResponseEntity<BookDto> response = restTemplate
+                .withBasicAuth("admin", "password")
+                .postForEntity("http://localhost:" + port + "/books", entity, BookDto.class);
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         return response.getBody();
@@ -145,4 +146,3 @@ class BookControllerTest {
         assertThat(deletedBook.isDeleted()).isTrue();
     }
 }
-
