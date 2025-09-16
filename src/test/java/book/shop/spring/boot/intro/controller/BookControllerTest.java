@@ -44,6 +44,7 @@ class BookControllerTest {
     private BookDto createBook(CreateBookRequestDto request) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
 
         ResponseEntity<BookDto> response = restTemplate
@@ -83,10 +84,9 @@ class BookControllerTest {
 
         BookDto createdBook = createBook(createRequest);
 
-        ResponseEntity<BookDto> response = restTemplate.getForEntity(
-                "http://localhost:" + port + "/books/" + createdBook.getId(),
-                BookDto.class
-        );
+        ResponseEntity<BookDto> response = restTemplate
+                .withBasicAuth("user", "password")
+                .getForEntity("http://localhost:" + port + "/books/" + createdBook.getId(), BookDto.class);
 
         BookDto actualResponse = response.getBody();
         assertThat(actualResponse).isEqualTo(createdBook);
@@ -114,12 +114,12 @@ class BookControllerTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(updateRequest), headers);
 
-        restTemplate.put("http://localhost:" + port + "/books/" + createdBook.getId(), entity);
+        restTemplate.withBasicAuth("admin", "password")
+                .put("http://localhost:" + port + "/books/" + createdBook.getId(), entity);
 
-        ResponseEntity<BookDto> response = restTemplate.getForEntity(
-                "http://localhost:" + port + "/books/" + createdBook.getId(),
-                BookDto.class
-        );
+        ResponseEntity<BookDto> response = restTemplate
+                .withBasicAuth("user", "password")
+                .getForEntity("http://localhost:" + port + "/books/" + createdBook.getId(), BookDto.class);
 
         BookDto actualResponse = response.getBody();
 
@@ -140,7 +140,8 @@ class BookControllerTest {
 
         BookDto createdBook = createBook(createRequest);
 
-        restTemplate.delete("http://localhost:" + port + "/books/" + createdBook.getId());
+        restTemplate.withBasicAuth("admin", "password")
+                .delete("http://localhost:" + port + "/books/" + createdBook.getId());
 
         Book deletedBook = bookRepository.findById(createdBook.getId()).orElseThrow();
         assertThat(deletedBook.isDeleted()).isTrue();
