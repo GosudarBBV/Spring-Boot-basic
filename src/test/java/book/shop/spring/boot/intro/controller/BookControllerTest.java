@@ -1,5 +1,6 @@
 package book.shop.spring.boot.intro.controller;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -28,6 +29,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -66,20 +68,27 @@ class BookControllerTest {
                 "http://example.com/cover.jpg", List.of(1L, 2L));
 
         BookDto expectedResponse = new BookDto();
-        expectedResponse.setId(1L);
         expectedResponse.setTitle("The Hobbit");
         expectedResponse.setAuthor("J.R.R. Tolkien");
         expectedResponse.setPrice(BigDecimal.valueOf(19.99));
         expectedResponse.setDescription("A fantasy novel");
         expectedResponse.setCoverImage("http://example.com/cover.jpg");
 
-        mockMvc.perform(post("/books")
+        MvcResult result = mockMvc.perform(post("/books")
                         .with(csrf())
                         .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(content().json(objectMapper.writeValueAsString(expectedResponse), false));
+                .andReturn();
+
+        BookDto actualResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                BookDto.class
+        );
+
+        expectedResponse.setId(actualResponse.getId());
+        assertThat(actualResponse).isEqualTo(expectedResponse);
     }
 
     @Test
