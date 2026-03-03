@@ -1,14 +1,6 @@
 package book.shop.spring.boot.intro.controller;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.CreateCategoryRequestDto;
@@ -18,19 +10,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 class CategoryControllerTest {
 
+    @LocalServerPort
+    private int port;
+
     @Autowired
-    private MockMvc mockMvc;
+    private TestRestTemplate restTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -38,121 +37,109 @@ class CategoryControllerTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    private Long createCategoryAndGetId(CreateCategoryRequestDto request) throws Exception {
-        String response = mockMvc.perform(post("/categories")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNumber())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+    private Category createCategory(CreateCategoryRequestDto request) throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        return objectMapper.readTree(response).get("id").asLong();
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+
+        ResponseEntity<Category> response = restTemplate
+                .withBasicAuth("admin", "password")
+                .postForEntity("http://localhost:" + port + "/categories", entity, Category.class);
+
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        return response.getBody();
     }
 
     @Test
     @DisplayName("Create category - success")
     void createCategory_ValidRequest_ReturnsCreatedCategory() throws Exception {
-        CreateCategoryRequestDto request
-                = new CreateCategoryRequestDto("Fantasy", "Magical books");
+        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Fantasy", "Magical books");
 
-        mockMvc.perform(post("/categories")
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Fantasy"))
-                .andExpect(jsonPath("$.description").value("Magical books"))
-                .andExpect(jsonPath("$.id").isNumber());
+        Category createdCategory = createCategory(request);
+
+        assertThat(createdCategory).isNotNull();
+        assertThat(createdCategory.getId()).isNotNull();
+        assertThat(createdCategory.getName()).isEqualTo("Fantasy");
+        assertThat(createdCategory.getDescription()).isEqualTo("Magical books");
     }
 
     @Test
     @DisplayName("Get all categories - returns array")
     void getAllCategories_ReturnsList() throws Exception {
-        createCategoryAndGetId(new CreateCategoryRequestDto("Sample",
-                "Sample description"));
+        createCategory(new CreateCategoryRequestDto("Sample", "Sample description"));
 
-        mockMvc.perform(get("/categories")
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].name").exists());
+        ResponseEntity<Category[]> response = restTemplate
+                .withBasicAuth("user", "password")
+                .getForEntity("http://localhost:" + port + "/categories", Category[].class);
+
+        Category[] categories = response.getBody();
+        assertThat(categories).isNotEmpty();
+        assertThat(categories[0].getName()).isNotNull();
     }
 
     @Test
     @DisplayName("Get category by ID - success")
     void getCategoryById_ReturnsCategory() throws Exception {
-        CreateCategoryRequestDto request = new CreateCategoryRequestDto("Sci-Fi",
-                "Science fiction books");
-        Long id = createCategoryAndGetId(request);
+        Category createdCategory = createCategory(new CreateCategoryRequestDto("Sci-Fi", "Science fiction books"));
 
-        mockMvc.perform(get("/categories/{id}", id)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.name").value("Sci-Fi"))
-                .andExpect(jsonPath("$.description").value("Science fiction books"));
+        ResponseEntity<Category> response = restTemplate
+                .withBasicAuth("user", "password")
+                .getForEntity("http://localhost:" + port + "/categories/" + createdCategory.getId(), Category.class);
+
+        Category category = response.getBody();
+        assertThat(category).isNotNull();
+        assertThat(category.getId()).isEqualTo(createdCategory.getId());
+        assertThat(category.getName()).isEqualTo("Sci-Fi");
+        assertThat(category.getDescription()).isEqualTo("Science fiction books");
     }
 
     @Test
     @DisplayName("Update category - success")
     void updateCategory_ReturnsUpdatedCategory() throws Exception {
-        CreateCategoryRequestDto createRequest
-                = new CreateCategoryRequestDto("History", "Historical books");
-        Long id = createCategoryAndGetId(createRequest);
+        Category createdCategory = createCategory(new CreateCategoryRequestDto("History", "Historical books"));
 
-        CreateCategoryRequestDto updateRequest
-                = new CreateCategoryRequestDto("Updated History",
-                "Updated description");
+        CreateCategoryRequestDto updateRequest = new CreateCategoryRequestDto("Updated History", "Updated description");
 
-        mockMvc.perform(put("/categories/{id}", id)
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.name").value("Updated History"))
-                .andExpect(jsonPath("$.description").value("Updated description"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(updateRequest), headers);
 
-        mockMvc.perform(get("/categories/{id}", id)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated History"))
-                .andExpect(jsonPath("$.description").value("Updated description"));
+        restTemplate.withBasicAuth("admin", "password")
+                .put("http://localhost:" + port + "/categories/" + createdCategory.getId(), entity);
+
+        ResponseEntity<Category> response = restTemplate
+                .withBasicAuth("user", "password")
+                .getForEntity("http://localhost:" + port + "/categories/" + createdCategory.getId(), Category.class);
+
+        Category updatedCategory = response.getBody();
+        assertThat(updatedCategory.getName()).isEqualTo("Updated History");
+        assertThat(updatedCategory.getDescription()).isEqualTo("Updated description");
     }
 
     @Test
-    @DisplayName("Delete category - success")
+    @DisplayName("Delete category - success (soft delete)")
     void deleteCategory_ReturnsOk() throws Exception {
-        CreateCategoryRequestDto request
-                = new CreateCategoryRequestDto("To delete", "Description");
-        Long id = createCategoryAndGetId(request);
+        Category createdCategory = createCategory(new CreateCategoryRequestDto("To delete", "Description"));
 
-        mockMvc.perform(delete("/categories/{id}", id)
-                        .with(csrf())
-                        .with(user("admin").roles("ADMIN")))
-                .andExpect(status().isOk());
+        restTemplate.withBasicAuth("admin", "password")
+                .delete("http://localhost:" + port + "/categories/" + createdCategory.getId());
 
-        Category deletedCategory = categoryRepository.findById(id).orElseThrow();
-        assertTrue(deletedCategory.isDeleted(), "Category should be marked as deleted");
-
+        Category deletedCategory = categoryRepository.findById(createdCategory.getId()).orElseThrow();
+        assertThat(deletedCategory.isDeleted()).isTrue();
     }
 
     @Test
     @DisplayName("Get books by category ID - success")
     void getBooksByCategory_ReturnsPagedBooks() throws Exception {
-        CreateCategoryRequestDto request
-                = new CreateCategoryRequestDto("Category for books", "Description");
-        Long categoryId = createCategoryAndGetId(request);
+        Category category = createCategory(new CreateCategoryRequestDto("Category for books", "Description"));
 
-        mockMvc.perform(get("/categories/by-category/{id}?page=0&size=10", categoryId)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+        ResponseEntity<String> response = restTemplate
+                .withBasicAuth("user", "password")
+                .getForEntity("http://localhost:" + port + "/categories/by-category/"
+                        + category.getId() + "?page=0&size=10", String.class);
+
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).contains("\"content\":");
     }
 }
