@@ -47,7 +47,6 @@ public class BookControllerTest {
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void saveBook_ValidData_ReturnsCreatedBook() {
-        // Створюємо категорії через API або SQL
         restTemplate.postForEntity("/categories", List.of(
                 new Object() { public Long id = 1L; public String name = "Test a"; },
                 new Object() { public Long id = 2L; public String name = "Test b"; }
@@ -73,6 +72,10 @@ public class BookControllerTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("New Book", response.getBody().getTitle());
+        assertEquals("New Author", response.getBody().getAuthor());
+        assertEquals(BigDecimal.valueOf(25.50), response.getBody().getPrice());
+        assertEquals("Book description", response.getBody().getDescription());
+        assertEquals("http://example.com/newcover.jpg", response.getBody().getCoverImage());
     }
 
     @Test
