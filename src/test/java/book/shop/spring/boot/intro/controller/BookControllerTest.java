@@ -2,7 +2,6 @@ package book.shop.spring.boot.intro.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.BookDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,9 +24,11 @@ import org.springframework.http.ResponseEntity;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.main.allow-bean-definition-overriding=true"
+        properties = {
+                "spring.main.allow-bean-definition-overriding=true",
+                "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
+        }
 )
-@Import(TestSecurityConfig.class)
 class BookControllerTest {
 
     @LocalServerPort
@@ -50,12 +50,12 @@ class BookControllerTest {
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
 
         ResponseEntity<BookDto> response = restTemplate
-                .withBasicAuth("admin", "password")
                 .postForEntity("http://localhost:" + port + "/books", entity, BookDto.class);
 
         assertThat(response.getStatusCode())
-                .withFailMessage("Status: " + response.getStatusCode()
-                        + " Body: " + response.getBody())
+                .withFailMessage("Status: "
+                        + response.getStatusCode() + " Body: "
+                        + response.getBody())
                 .isEqualTo(HttpStatus.CREATED);
 
         return response.getBody();
@@ -91,8 +91,8 @@ class BookControllerTest {
         BookDto createdBook = createBook(createRequest);
 
         ResponseEntity<BookDto> response = restTemplate
-                .withBasicAuth("user", "password")
-                .getForEntity("http://localhost:" + port + "/books/" + createdBook.getId(), BookDto.class);
+                .getForEntity("http://localhost:" + port
+                        + "/books/" + createdBook.getId(), BookDto.class);
 
         BookDto actualResponse = response.getBody();
         assertThat(actualResponse).isEqualTo(createdBook);
@@ -118,14 +118,15 @@ class BookControllerTest {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(updateRequest), headers);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper
+                .writeValueAsString(updateRequest), headers);
 
-        restTemplate.withBasicAuth("admin", "password")
-                .put("http://localhost:" + port + "/books/" + createdBook.getId(), entity);
+        restTemplate.put("http://localhost:" + port + "/books/"
+                + createdBook.getId(), entity);
 
         ResponseEntity<BookDto> response = restTemplate
-                .withBasicAuth("user", "password")
-                .getForEntity("http://localhost:" + port + "/books/" + createdBook.getId(), BookDto.class);
+                .getForEntity("http://localhost:" + port + "/books/"
+                        + createdBook.getId(), BookDto.class);
 
         BookDto actualResponse = response.getBody();
 
@@ -133,7 +134,8 @@ class BookControllerTest {
         assertThat(actualResponse.getAuthor()).isEqualTo("Updated Author");
         assertThat(actualResponse.getPrice()).isEqualTo(BigDecimal.valueOf(25.50));
         assertThat(actualResponse.getDescription()).isEqualTo("Updated Description");
-        assertThat(actualResponse.getCoverImage()).isEqualTo("http://example.com/updated.jpg");
+        assertThat(actualResponse.getCoverImage())
+                .isEqualTo("http://example.com/updated.jpg");
     }
 
     @Test
@@ -146,8 +148,7 @@ class BookControllerTest {
 
         BookDto createdBook = createBook(createRequest);
 
-        restTemplate.withBasicAuth("admin", "password")
-                .delete("http://localhost:" + port + "/books/" + createdBook.getId());
+        restTemplate.delete("http://localhost:" + port + "/books/" + createdBook.getId());
 
         Book deletedBook = bookRepository.findById(createdBook.getId()).orElseThrow();
         assertThat(deletedBook.isDeleted()).isTrue();
