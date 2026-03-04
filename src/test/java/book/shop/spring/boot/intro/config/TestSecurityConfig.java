@@ -29,20 +29,15 @@ public class TestSecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails user = User.withUsername("user")
-                .password("password") // без {noop}, бо ми використовуємо NoOpPasswordEncoder
+                .password("{noop}password")
                 .roles("USER")
                 .build();
 
         UserDetails admin = User.withUsername("admin")
-                .password("password")
+                .password("{noop}password")
                 .roles("ADMIN")
                 .build();
 
         return new InMemoryUserDetailsManager(user, admin);
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
     }
 }
