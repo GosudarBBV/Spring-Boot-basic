@@ -60,7 +60,7 @@ class BookControllerTest {
         CreateBookRequestDto request = new CreateBookRequestDto(
                 "The Hobbit", "J.R.R. Tolkien", "9783161484100",
                 BigDecimal.valueOf(19.99), "A fantasy novel",
-                "http://example.com/cover.jpg", List.of(1L, 2L));
+                "http://example.com/cover.jpg", List.of());
 
         BookDto actualResponse = createBook(request);
 
