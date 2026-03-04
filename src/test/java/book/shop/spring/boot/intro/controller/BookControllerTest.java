@@ -30,9 +30,9 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Create book with valid data")
-    @Sql(scripts = "classpath:database/clear-books-table.sql",
+    @Sql(scripts = "classpath:database/books/clear-books-table.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:database/clear-books-table.sql",
+    @Sql(scripts = "classpath:database/books/clear-books-table.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void saveBook_ValidData_ReturnsCreatedBook() {
         CreateBookRequestDto request = new CreateBookRequestDto(
@@ -61,11 +61,11 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Get all books with pagination")
-    @Sql(scripts = {"classpath:database/add-books-to-table.sql",
-            "classpath:database/add-books-and-categories-into-table.sql"},
+    @Sql(scripts = {"classpath:database/books/add-books-to-table.sql",
+            "classpath:database/books/add-books-and-categories-into-table.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = {"classpath:database/remove-books-from-table-books.sql",
-            "classpath:database/delete-books-categories.sql"},
+    @Sql(scripts = {"classpath:database/books/remove-books-from-table-books.sql",
+            "classpath:database/books/delete-books-categories.sql"},
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void findAllBooks_BooksExist_ReturnsBooksPage() {
         ResponseEntity<BookDto[]> response = restTemplate.getForEntity("/books",
@@ -80,9 +80,9 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Get book by ID")
-    @Sql(scripts = {"classpath:database/add-books-to-table.sql"},
+    @Sql(scripts = {"classpath:database/books/add-books-to-table.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:database/remove-books-from-table-books.sql",
+    @Sql(scripts = "classpath:database/books/remove-books-from-table-books.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void findBookById_BookExists_ReturnsBook() {
         ResponseEntity<BookDto> response
@@ -96,9 +96,9 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Update book by ID")
-    @Sql(scripts = {"classpath:database/add-books-to-table.sql"},
+    @Sql(scripts = {"classpath:database/books/add-books-to-table.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:database/remove-books-from-table-books.sql",
+    @Sql(scripts = "classpath:database/books/remove-books-from-table-books.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void updateBook_BookExists_ReturnsUpdatedBook() {
         UpdateBookRequestDto request = new UpdateBookRequestDto();
@@ -121,9 +121,9 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Delete book by ID")
-    @Sql(scripts = {"classpath:database/add-books-to-table.sql"},
+    @Sql(scripts = {"classpath:database/books/add-books-to-table.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:database/remove-books-from-table-books.sql",
+    @Sql(scripts = "classpath:database/books/remove-books-from-table-books.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void deleteBook_BookExists_ReturnsNoContent() {
         ResponseEntity<Void> response = restTemplate.exchange("/books/1",
