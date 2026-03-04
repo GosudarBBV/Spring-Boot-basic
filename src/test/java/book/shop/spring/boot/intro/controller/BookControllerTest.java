@@ -20,9 +20,9 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestSecurityConfig.class)
@@ -51,6 +51,10 @@ class BookControllerTest {
                 .postForEntity("http://localhost:" + port + "/books", entity, BookDto.class);
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+
+        assertThat(response.getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+
         return response.getBody();
     }
 
