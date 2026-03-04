@@ -59,7 +59,7 @@ class BookControllerTest {
     void save_ValidRequest_ReturnsCreatedBook() throws Exception {
         CreateBookRequestDto request = new CreateBookRequestDto(
                 "The Hobbit", "J.R.R. Tolkien", "9783161484100",
-                BigDecimal.valueOf(18.99), "A fantasy novel",
+                BigDecimal.valueOf(19.99), "A fantasy novel",
                 "http://example.com/cover.jpg", List.of());
 
         BookDto actualResponse = createBook(request);
