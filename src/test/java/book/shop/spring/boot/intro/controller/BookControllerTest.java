@@ -50,9 +50,9 @@ class BookControllerTest {
                 .withBasicAuth("admin", "password")
                 .postForEntity("http://localhost:" + port + "/books", entity, BookDto.class);
 
-        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-
         assertThat(response.getStatusCode())
+                .withFailMessage("Status: " + response.getStatusCode()
+                        + " Body: " + response.getBody())
                 .isEqualTo(HttpStatus.CREATED);
 
         return response.getBody();
