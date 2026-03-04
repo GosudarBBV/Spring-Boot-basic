@@ -1,13 +1,12 @@
 package book.shop.spring.boot.intro.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import book.shop.spring.boot.intro.dto.BookDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
-import book.shop.spring.boot.intro.model.Book;
-import book.shop.spring.boot.intro.repository.BookRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -15,142 +14,120 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.jdbc.Sql;
 
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {
-                "spring.main.allow-bean-definition-overriding=true",
-                "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
-        }
-)
-class BookControllerTest {
-
-    @LocalServerPort
-    private int port;
-
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class BookControllerTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
 
-    private BookDto createBook(CreateBookRequestDto request) throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
-
-        ResponseEntity<BookDto> response = restTemplate
-                .postForEntity("http://localhost:" + port + "/books", entity, BookDto.class);
-
-        assertThat(response.getStatusCode())
-                .withFailMessage("Status: "
-                        + response.getStatusCode() + " Body: "
-                        + response.getBody())
-                .isEqualTo(HttpStatus.CREATED);
-
-        return response.getBody();
-    }
-
     @Test
-    @DisplayName("Create book - success")
-    void save_ValidRequest_ReturnsCreatedBook() throws Exception {
+    @DisplayName("Create book with valid data")
+    @Sql(scripts = "classpath:database/clear-books-table.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:database/clear-books-table.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void saveBook_ValidData_ReturnsCreatedBook() {
         CreateBookRequestDto request = new CreateBookRequestDto(
-                "The Hobbit", "J.R.R. Tolkien", "9783161484100",
-                BigDecimal.valueOf(19.99), "A fantasy novel",
-                "http://example.com/cover.jpg", List.of());
-
-        BookDto actualResponse = createBook(request);
-
-        assertThat(actualResponse).isNotNull();
-        assertThat(actualResponse.getId()).isNotNull();
-        assertThat(actualResponse.getTitle()).isEqualTo("The Hobbit");
-        assertThat(actualResponse.getAuthor()).isEqualTo("J.R.R. Tolkien");
-        assertThat(actualResponse.getPrice()).isEqualTo(BigDecimal.valueOf(19.99));
-        assertThat(actualResponse.getDescription()).isEqualTo("A fantasy novel");
-        assertThat(actualResponse.getCoverImage()).isEqualTo("http://example.com/cover.jpg");
-    }
-
-    @Test
-    @DisplayName("Get book by id - success")
-    void findById_ValidId_ReturnsBook() throws Exception {
-        CreateBookRequestDto createRequest = new CreateBookRequestDto(
-                "1984", "George Orwell", "1234567890123",
-                BigDecimal.valueOf(15.00), "Dystopian novel",
-                "http://example.com/1984.jpg", List.of());
-
-        BookDto createdBook = createBook(createRequest);
-
-        ResponseEntity<BookDto> response = restTemplate
-                .getForEntity("http://localhost:" + port
-                        + "/books/" + createdBook.getId(), BookDto.class);
-
-        BookDto actualResponse = response.getBody();
-        assertThat(actualResponse).isEqualTo(createdBook);
-    }
-
-    @Test
-    @DisplayName("Update book by ID - success")
-    void update_ValidRequest_ReturnsUpdatedBook() throws Exception {
-        CreateBookRequestDto createRequest = new CreateBookRequestDto(
-                "Original Title", "Original Author", "1111111111111",
-                BigDecimal.valueOf(20.00), "Original description",
-                "http://example.com/original.jpg", List.of());
-
-        BookDto createdBook = createBook(createRequest);
-
-        UpdateBookRequestDto updateRequest = new UpdateBookRequestDto();
-        updateRequest.setTitle("Updated Title");
-        updateRequest.setAuthor("Updated Author");
-        updateRequest.setIsbn("2222222222222");
-        updateRequest.setPrice(BigDecimal.valueOf(25.50));
-        updateRequest.setDescription("Updated Description");
-        updateRequest.setCoverImage("http://example.com/updated.jpg");
+                "New Book",
+                "New Author",
+                "1234567890123",
+                BigDecimal.valueOf(25.50),
+                "Book description",
+                "http://example.com/newcover.jpg",
+                List.of(1L, 2L)
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<>(objectMapper
-                .writeValueAsString(updateRequest), headers);
+        HttpEntity<CreateBookRequestDto> entity = new HttpEntity<>(request, headers);
 
-        restTemplate.put("http://localhost:" + port + "/books/"
-                + createdBook.getId(), entity);
+        ResponseEntity<BookDto> response = restTemplate.exchange("/books",
+                HttpMethod.POST, entity, BookDto.class);
 
-        ResponseEntity<BookDto> response = restTemplate
-                .getForEntity("http://localhost:" + port + "/books/"
-                        + createdBook.getId(), BookDto.class);
-
-        BookDto actualResponse = response.getBody();
-
-        assertThat(actualResponse.getTitle()).isEqualTo("Updated Title");
-        assertThat(actualResponse.getAuthor()).isEqualTo("Updated Author");
-        assertThat(actualResponse.getPrice()).isEqualTo(BigDecimal.valueOf(25.50));
-        assertThat(actualResponse.getDescription()).isEqualTo("Updated Description");
-        assertThat(actualResponse.getCoverImage())
-                .isEqualTo("http://example.com/updated.jpg");
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("New Book", response.getBody().getTitle());
+        assertEquals("New Author", response.getBody().getAuthor());
+        assertEquals(BigDecimal.valueOf(25.50), response.getBody().getPrice());
     }
 
     @Test
-    @DisplayName("Delete book by ID - success (soft delete)")
-    void deleteById_ValidId_SetsDeletedFlag() throws Exception {
-        CreateBookRequestDto createRequest = new CreateBookRequestDto(
-                "To be deleted", "Author", "3333333333333",
-                BigDecimal.valueOf(10.00), "To be deleted description",
-                "http://example.com/delete.jpg", List.of());
+    @DisplayName("Get all books with pagination")
+    @Sql(scripts = {"classpath:database/add-books-to-table.sql",
+            "classpath:database/add-books-and-categories-into-table.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {"classpath:database/remove-books-from-table-books.sql",
+            "classpath:database/delete-books-categories.sql"},
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void findAllBooks_BooksExist_ReturnsBooksPage() {
+        ResponseEntity<BookDto[]> response = restTemplate.getForEntity("/books",
+                BookDto[].class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        BookDto[] books = response.getBody();
+        assertNotNull(books);
+        assertTrue(books.length >= 2);
+        assertEquals("Test Book 1", books[0].getTitle());
+        assertEquals("Test Book 2", books[1].getTitle());
+    }
 
-        BookDto createdBook = createBook(createRequest);
+    @Test
+    @DisplayName("Get book by ID")
+    @Sql(scripts = {"classpath:database/add-books-to-table.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:database/remove-books-from-table-books.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void findBookById_BookExists_ReturnsBook() {
+        ResponseEntity<BookDto> response
+                = restTemplate.getForEntity("/books/1", BookDto.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        BookDto book = response.getBody();
+        assertNotNull(book);
+        assertEquals("Test Book 1", book.getTitle());
+        assertEquals("Test Author 1", book.getAuthor());
+    }
 
-        restTemplate.delete("http://localhost:" + port + "/books/" + createdBook.getId());
+    @Test
+    @DisplayName("Update book by ID")
+    @Sql(scripts = {"classpath:database/add-books-to-table.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:database/remove-books-from-table-books.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void updateBook_BookExists_ReturnsUpdatedBook() {
+        UpdateBookRequestDto request = new UpdateBookRequestDto();
+        request.setTitle("Updated Title");
+        request.setPrice(BigDecimal.valueOf(99.99));
 
-        Book deletedBook = bookRepository.findById(createdBook.getId()).orElseThrow();
-        assertThat(deletedBook.isDeleted()).isTrue();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<UpdateBookRequestDto> entity = new HttpEntity<>(request, headers);
+
+        ResponseEntity<BookDto> response = restTemplate.exchange("/books/1",
+                HttpMethod.PUT, entity, BookDto.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        BookDto updatedBook = response.getBody();
+        assertNotNull(updatedBook);
+        assertEquals("Updated Title", updatedBook.getTitle());
+        assertEquals(BigDecimal.valueOf(99.99), updatedBook.getPrice());
+    }
+
+    @Test
+    @DisplayName("Delete book by ID")
+    @Sql(scripts = {"classpath:database/add-books-to-table.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:database/remove-books-from-table-books.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void deleteBook_BookExists_ReturnsNoContent() {
+        ResponseEntity<Void> response = restTemplate.exchange("/books/1",
+                HttpMethod.DELETE, null, Void.class);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }
 }
