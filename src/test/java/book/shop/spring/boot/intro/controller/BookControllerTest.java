@@ -47,11 +47,10 @@ public class BookControllerTest {
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void saveBook_ValidData_ReturnsCreatedBook() {
+        // Створюємо категорії через API або SQL
         restTemplate.postForEntity("/categories", List.of(
-                new Object() { public Long id = 1L;
-                    public String name = "Test a"; },
-                new Object() { public Long id = 2L;
-                    public String name = "Test b"; }
+                new Object() { public Long id = 1L; public String name = "Test a"; },
+                new Object() { public Long id = 2L; public String name = "Test b"; }
         ), Void.class);
 
         CreateBookRequestDto request = new CreateBookRequestDto(
@@ -89,7 +88,7 @@ public class BookControllerTest {
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void findAllBooks_BooksExist_ReturnsBooksPage() {
-        ResponseEntity<BookDto[]> response = userRestTemplate()
+        ResponseEntity<BookDto[]> response = adminRestTemplate()
                 .getForEntity("/books", BookDto[].class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -102,12 +101,18 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Get book by ID")
-    @Sql(scripts = {"classpath:database/books/add-books-to-table.sql"},
-            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = {"classpath:database/books/remove-books-from-table-books.sql"},
-            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @Sql(scripts = {
+            "classpath:database/categories/add-categories-to-table.sql",
+            "classpath:database/books/add-books-to-table.sql",
+            "classpath:database/books/add-books-and-categories-into-table.sql"
+    }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {
+            "classpath:database/books/remove-books-from-table-books.sql",
+            "classpath:database/books/delete-books-categories.sql",
+            "classpath:database/categories/delete-categories.sql"
+    }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void findBookById_BookExists_ReturnsBook() {
-        ResponseEntity<BookDto> response = userRestTemplate()
+        ResponseEntity<BookDto> response = adminRestTemplate()
                 .getForEntity("/books/1", BookDto.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -118,10 +123,16 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Update book by ID")
-    @Sql(scripts = {"classpath:database/books/add-books-to-table.sql"},
-            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = {"classpath:database/books/remove-books-from-table-books.sql"},
-            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @Sql(scripts = {
+            "classpath:database/categories/add-categories-to-table.sql",
+            "classpath:database/books/add-books-to-table.sql",
+            "classpath:database/books/add-books-and-categories-into-table.sql"
+    }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {
+            "classpath:database/books/remove-books-from-table-books.sql",
+            "classpath:database/books/delete-books-categories.sql",
+            "classpath:database/categories/delete-categories.sql"
+    }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void updateBook_BookExists_ReturnsUpdatedBook() {
         UpdateBookRequestDto request = new UpdateBookRequestDto();
         request.setTitle("Updated Title");
@@ -141,10 +152,16 @@ public class BookControllerTest {
 
     @Test
     @DisplayName("Delete book by ID")
-    @Sql(scripts = {"classpath:database/books/add-books-to-table.sql"},
-            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = {"classpath:database/books/remove-books-from-table-books.sql"},
-            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @Sql(scripts = {
+            "classpath:database/categories/add-categories-to-table.sql",
+            "classpath:database/books/add-books-to-table.sql",
+            "classpath:database/books/add-books-and-categories-into-table.sql"
+    }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {
+            "classpath:database/books/remove-books-from-table-books.sql",
+            "classpath:database/books/delete-books-categories.sql",
+            "classpath:database/categories/delete-categories.sql"
+    }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void deleteBook_BookExists_ReturnsNoContent() {
         ResponseEntity<Void> response = adminRestTemplate()
                 .exchange("/books/1", HttpMethod.DELETE, null, Void.class);
