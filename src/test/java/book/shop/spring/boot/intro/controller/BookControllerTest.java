@@ -91,16 +91,20 @@ public class BookControllerTest {
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void findAllBooks_BooksExist_ReturnsBooksPage() {
-        ResponseEntity<List<BookDto>> response = adminRestTemplate()
-                .exchange("/books", HttpMethod.GET, null,
-                        new org.springframework.core.ParameterizedTypeReference<List<BookDto>>() {});
+        ResponseEntity<java.util.Map> response = adminRestTemplate()
+                .exchange("/books", HttpMethod.GET, null, java.util.Map.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<BookDto> books = response.getBody();
-        assertNotNull(books);
-        assertTrue(books.size() >= 2);
-        assertEquals("Test Book 1", books.get(0).getTitle());
-        assertEquals("Test Book 2", books.get(1).getTitle());
+
+        java.util.Map body = response.getBody();
+        assertNotNull(body);
+
+        java.util.List<java.util.Map> content = (java.util.List<java.util.Map>) body.get("content");
+        assertNotNull(content);
+        assertTrue(content.size() >= 2);
+
+        assertEquals("Test Book 1", content.get(0).get("title"));
+        assertEquals("Test Book 2", content.get(1).get("title"));
     }
 
     @Test
