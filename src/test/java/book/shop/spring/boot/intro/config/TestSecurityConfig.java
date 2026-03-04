@@ -21,8 +21,8 @@ public class TestSecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth
-                        -> auth.anyRequest().permitAll());
-
+                        -> auth.anyRequest().authenticated())
+                .httpBasic();
         return http.build();
     }
 
