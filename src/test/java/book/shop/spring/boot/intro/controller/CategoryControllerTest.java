@@ -1,9 +1,11 @@
 package book.shop.spring.boot.intro.controller;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.CategoryDto;
 import book.shop.spring.boot.intro.dto.CreateCategoryRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +25,7 @@ import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(TestSecurityConfig.class)
 class CategoryControllerTest {
 
     protected static MockMvc mockMvc;
@@ -55,6 +59,7 @@ class CategoryControllerTest {
 
         MvcResult result = mockMvc.perform(
                         post("/categories")
+                                .with(csrf())
                                 .content(jsonRequest)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
