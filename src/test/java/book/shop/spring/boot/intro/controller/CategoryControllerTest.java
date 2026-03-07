@@ -30,6 +30,7 @@ import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -55,7 +56,7 @@ class CategoryControllerTest {
             connection.setAutoCommit(true);
             ScriptUtils.executeSqlScript(
                     connection,
-                    new ClassPathResource("classpath:database/categories/add-categories-to-table.sql")
+                    new ClassPathResource("database/categories/add-categories-to-table.sql")
             );
         }
     }
@@ -73,7 +74,7 @@ class CategoryControllerTest {
             connection.setAutoCommit(true);
             ScriptUtils.executeSqlScript(
                     connection,
-                    new ClassPathResource("classpath:database/categories/delete-categories.sql")
+                    new ClassPathResource("database/categories/delete-categories.sql")
             );
         }
     }
