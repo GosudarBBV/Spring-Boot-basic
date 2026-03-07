@@ -52,7 +52,6 @@ class BookControllerTest {
     @Sql(scripts = "classpath:database/books/remove-books-from-table-books.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void createBook_ValidRequestDto_ReturnBook() throws Exception {
-
         CreateBookRequestDto requestDto = new CreateBookRequestDto(
                 "New Book",
                 "New Author",
@@ -96,7 +95,6 @@ class BookControllerTest {
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findAll_GivenBooks_ReturnPage() throws Exception {
-
         MvcResult result = mockMvc.perform(
                         get("/books")
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -122,7 +120,6 @@ class BookControllerTest {
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findById_ExistingId_ReturnBook() throws Exception {
-
         MvcResult result = mockMvc.perform(
                         get("/books/1")
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -151,7 +148,6 @@ class BookControllerTest {
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void updateBook_ValidRequest_ReturnUpdatedBook() throws Exception {
-
         UpdateBookRequestDto requestDto = new UpdateBookRequestDto();
         requestDto.setTitle("Updated Book");
         requestDto.setAuthor("Updated Author");
@@ -191,7 +187,6 @@ class BookControllerTest {
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void deleteBook_ExistingId_Success() throws Exception {
-
         mockMvc.perform(
                         delete("/books/1")
                                 .with(csrf()))
