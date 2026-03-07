@@ -2,6 +2,7 @@ package book.shop.spring.boot.intro.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -10,10 +11,7 @@ import book.shop.spring.boot.intro.dto.CategoryDto;
 import book.shop.spring.boot.intro.dto.CreateCategoryRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -30,6 +28,8 @@ import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -107,5 +107,30 @@ class CategoryControllerTest {
         );
 
         EqualsBuilder.reflectionEquals(expected,actual,"id");
+    }
+
+    @Test
+    @DisplayName("Get all categories")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void getAll_GivenCategories_ShouldReturnAllCategories() throws Exception {
+        List<CategoryDto> expected = new ArrayList<>();
+        expected.add(new CategoryDto().setId(1L).setName("Test a"));
+        expected.add(new CategoryDto().setId(2L).setName("Test b"));
+
+        MvcResult result = mockMvc.perform(
+                        get("/categories")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        CategoryDto[] actual = objectMapper.readValue(
+                result.getResponse()
+                        .getContentAsByteArray(),
+                CategoryDto[].class);
+        Assertions.assertEquals(3, actual.length);
+        Assertions.assertEquals(expected, Arrays.stream(actual).toList());
+
+
     }
 }
