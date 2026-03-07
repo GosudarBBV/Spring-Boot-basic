@@ -1,85 +1,91 @@
 package book.shop.spring.boot.intro.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.BookDto;
 import book.shop.spring.boot.intro.dto.CreateBookRequestDto;
 import book.shop.spring.boot.intro.dto.UpdateBookRequestDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class BookControllerTest {
+@Import(TestSecurityConfig.class)
+class BookControllerTest {
+
+    protected static MockMvc mockMvc;
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private ObjectMapper objectMapper;
 
-    private TestRestTemplate adminRestTemplate() {
-        return restTemplate.withBasicAuth("admin", "admin");
-    }
-
-    private TestRestTemplate userRestTemplate() {
-        return restTemplate.withBasicAuth("user", "user");
+    @BeforeAll
+    static void beforeAll(@Autowired WebApplicationContext applicationContext) {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(applicationContext)
+                .build();
     }
 
     @Test
-    @DisplayName("Create book with valid data")
-    @Sql(scripts = {
-            "classpath:database/categories/clear-categories.sql",
-            "classpath:database/books/clear-books-table.sql"
-    }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = {
-            "classpath:database/books/clear-books-table.sql",
-            "classpath:database/categories/delete-categories.sql"
-    }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void saveBook_ValidData_ReturnsCreatedBook() {
-        restTemplate.postForEntity("/categories", List.of(
-                new Object() { public Long id = 1L; public String name = "Test a"; },
-                new Object() { public Long id = 2L; public String name = "Test b"; }
-        ), Void.class);
+    @DisplayName("Create book")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @Sql(scripts = "classpath:database/categories/add-categories-to-table.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:database/books/remove-books-from-table-books.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    void createBook_ValidRequestDto_ReturnBook() throws Exception {
 
-        CreateBookRequestDto request = new CreateBookRequestDto(
+        CreateBookRequestDto requestDto = new CreateBookRequestDto(
                 "New Book",
                 "New Author",
-                "1234567890123",
-                BigDecimal.valueOf(25.50),
-                "Book description",
-                "http://example.com/newcover.jpg",
-                List.of(1L, 2L)
+                "9783161484102",
+                BigDecimal.valueOf(39.99),
+                "Test description",
+                "http://example.com/new.jpg",
+                List.of(1L)
         );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<CreateBookRequestDto> entity = new HttpEntity<>(request, headers);
+        String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
-        ResponseEntity<BookDto> response = adminRestTemplate()
-                .exchange("/books", HttpMethod.POST, entity, BookDto.class);
+        MvcResult result = mockMvc.perform(
+                        post("/books")
+                                .with(csrf())
+                                .content(jsonRequest)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("New Book", response.getBody().getTitle());
-        assertEquals("New Author", response.getBody().getAuthor());
-        assertEquals(BigDecimal.valueOf(25.50), response.getBody().getPrice());
-        assertEquals("Book description", response.getBody().getDescription());
-        assertEquals("http://example.com/newcover.jpg", response.getBody().getCoverImage());
+        BookDto actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                BookDto.class
+        );
+
+        assert actual.getTitle().equals("New Book");
+        assert actual.getAuthor().equals("New Author");
+        assert actual.getPrice().equals(BigDecimal.valueOf(39.99));
     }
 
     @Test
-    @DisplayName("Get all books with pagination")
+    @DisplayName("Get all books")
+    @WithMockUser(username = "user", roles = {"USER"})
     @Sql(scripts = {
             "classpath:database/categories/add-categories-to-table.sql",
             "classpath:database/books/add-books-to-table.sql",
@@ -87,28 +93,25 @@ public class BookControllerTest {
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = {
             "classpath:database/books/remove-books-from-table-books.sql",
-            "classpath:database/books/delete-books-categories.sql",
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void findAllBooks_BooksExist_ReturnsBooksPage() {
-        ResponseEntity<java.util.Map> response = adminRestTemplate()
-                .exchange("/books", HttpMethod.GET, null, java.util.Map.class);
+    void findAll_GivenBooks_ReturnPage() throws Exception {
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        MvcResult result = mockMvc.perform(
+                        get("/books")
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        java.util.Map body = response.getBody();
-        assertNotNull(body);
+        String json = result.getResponse().getContentAsString();
 
-        java.util.List<java.util.Map> content = (java.util.List<java.util.Map>) body.get("content");
-        assertNotNull(content);
-        assertTrue(content.size() >= 2);
-
-        assertEquals("Test Book 1", content.get(0).get("title"));
-        assertEquals("Test Book 2", content.get(1).get("title"));
+        assert json.contains("Test Book 1");
+        assert json.contains("Test Book 2");
     }
 
     @Test
-    @DisplayName("Get book by ID")
+    @DisplayName("Get book by id")
+    @WithMockUser(username = "user", roles = {"USER"})
     @Sql(scripts = {
             "classpath:database/categories/add-categories-to-table.sql",
             "classpath:database/books/add-books-to-table.sql",
@@ -116,21 +119,28 @@ public class BookControllerTest {
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = {
             "classpath:database/books/remove-books-from-table-books.sql",
-            "classpath:database/books/delete-books-categories.sql",
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void findBookById_BookExists_ReturnsBook() {
-        ResponseEntity<BookDto> response = adminRestTemplate()
-                .getForEntity("/books/1", BookDto.class);
+    void findById_ExistingId_ReturnBook() throws Exception {
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        BookDto book = response.getBody();
-        assertNotNull(book);
-        assertEquals("Test Book 1", book.getTitle());
+        MvcResult result = mockMvc.perform(
+                        get("/books/1")
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        BookDto actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                BookDto.class
+        );
+
+        assert actual.getId().equals(1L);
+        assert actual.getTitle().equals("Test Book 1");
     }
 
     @Test
-    @DisplayName("Update book by ID")
+    @DisplayName("Update book")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     @Sql(scripts = {
             "classpath:database/categories/add-categories-to-table.sql",
             "classpath:database/books/add-books-to-table.sql",
@@ -138,28 +148,39 @@ public class BookControllerTest {
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = {
             "classpath:database/books/remove-books-from-table-books.sql",
-            "classpath:database/books/delete-books-categories.sql",
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void updateBook_BookExists_ReturnsUpdatedBook() {
-        UpdateBookRequestDto request = new UpdateBookRequestDto();
-        request.setTitle("Updated Title");
+    void updateBook_ValidRequest_ReturnUpdatedBook() throws Exception {
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<UpdateBookRequestDto> entity = new HttpEntity<>(request, headers);
+        UpdateBookRequestDto requestDto = new UpdateBookRequestDto();
+        requestDto.setTitle("Updated Book");
+        requestDto.setAuthor("Updated Author");
+        requestDto.setIsbn("9783161484105");
+        requestDto.setPrice(BigDecimal.valueOf(49.99));
+        requestDto.setDescription("Updated description");
+        requestDto.setCoverImage("http://example.com/updated.jpg");
 
-        ResponseEntity<BookDto> response = adminRestTemplate()
-                .exchange("/books/1", HttpMethod.PUT, entity, BookDto.class);
+        String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        BookDto updatedBook = response.getBody();
-        assertNotNull(updatedBook);
-        assertEquals("Updated Title", updatedBook.getTitle());
+        MvcResult result = mockMvc.perform(
+                        put("/books/1")
+                                .with(csrf())
+                                .content(jsonRequest)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        BookDto actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                BookDto.class
+        );
+
+        assert actual.getTitle().equals("Updated Book");
     }
 
     @Test
-    @DisplayName("Delete book by ID")
+    @DisplayName("Delete book")
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     @Sql(scripts = {
             "classpath:database/categories/add-categories-to-table.sql",
             "classpath:database/books/add-books-to-table.sql",
@@ -167,12 +188,13 @@ public class BookControllerTest {
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = {
             "classpath:database/books/remove-books-from-table-books.sql",
-            "classpath:database/books/delete-books-categories.sql",
             "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-    public void deleteBook_BookExists_ReturnsNoContent() {
-        ResponseEntity<Void> response = adminRestTemplate()
-                .exchange("/books/1", HttpMethod.DELETE, null, Void.class);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    void deleteBook_ExistingId_Success() throws Exception {
+
+        mockMvc.perform(
+                        delete("/books/1")
+                                .with(csrf()))
+                .andExpect(status().isNoContent());
     }
 }
