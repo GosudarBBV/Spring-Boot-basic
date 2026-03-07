@@ -206,6 +206,8 @@ class CategoryControllerTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     @Sql(scripts = "classpath:database/categories/add-categories-to-table.sql",
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:database/categories/delete-categories.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void deleteCategory_ExistingId_Success() throws Exception {
         mockMvc.perform(
                         delete("/categories/{id}", 1L)
@@ -228,8 +230,15 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Get books by category ID with books")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
-    @Sql(scripts = "classpath:database/categories/add-categories-to-table.sql",
-            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {
+            "classpath:database/categories/add-categories-to-table.sql",
+            "classpath:database/books/add-books-to-table.sql",
+            "classpath:database/books/add-books-and-categories-into-table.sql"
+    }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = {
+            "classpath:database/books/clear-books-table.sql",
+            "classpath:database/categories/delete-categories.sql"
+    }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void getBooksByCategoryId_ExistingCategory_ShouldReturnBooks() throws Exception {
         MvcResult result = mockMvc.perform(
                         get("/categories/by-category/{id}", 1L)
@@ -240,7 +249,6 @@ class CategoryControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // Можна перевірити, що Page не порожній
         String content = result.getResponse().getContentAsString();
         Assertions.assertTrue(content.contains("id"));
     }
