@@ -231,6 +231,7 @@ class CategoryControllerTest {
     @DisplayName("Get books by category ID with books")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     @Sql(scripts = {
+            "classpath:database/schemas/clear-all-tables.sql",
             "classpath:database/categories/add-categories-to-table.sql",
             "classpath:database/books/add-books-to-table.sql",
             "classpath:database/books/add-books-and-categories-into-table.sql"
