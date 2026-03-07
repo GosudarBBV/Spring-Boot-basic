@@ -166,7 +166,8 @@ class CategoryControllerTest {
     @Sql(scripts = "classpath:database/categories/delete-categories.sql",
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void updateCategory_ExistingId_Success() throws Exception {
-        CreateCategoryRequestDto updateDto = new CreateCategoryRequestDto("Updated Name", "Updated Desc");
+        CreateCategoryRequestDto updateDto = new CreateCategoryRequestDto("Updated Name",
+                "Updated Desc");
         String jsonRequest = objectMapper.writeValueAsString(updateDto);
 
         MvcResult result = mockMvc.perform(
@@ -192,7 +193,8 @@ class CategoryControllerTest {
     @DisplayName("Update category with non-existing ID should return 404")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void updateCategory_NonExistingId_ShouldReturn404() throws Exception {
-        CreateCategoryRequestDto updateDto = new CreateCategoryRequestDto("Name", "Desc");
+        CreateCategoryRequestDto updateDto
+                = new CreateCategoryRequestDto("Name", "Desc");
         String jsonRequest = objectMapper.writeValueAsString(updateDto);
 
         mockMvc.perform(
