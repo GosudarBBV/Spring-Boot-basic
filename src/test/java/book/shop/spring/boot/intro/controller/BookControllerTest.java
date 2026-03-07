@@ -116,8 +116,8 @@ class BookControllerTest {
             "classpath:database/books/add-books-and-categories-into-table.sql"
     }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Sql(scripts = {
+            "classpath:database/categories/delete-categories.sql",
             "classpath:database/books/remove-books-from-table-books.sql",
-            "classpath:database/categories/delete-categories.sql"
     }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void findById_ExistingId_ReturnBook() throws Exception {
         MvcResult result = mockMvc.perform(
