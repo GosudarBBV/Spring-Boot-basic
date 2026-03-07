@@ -130,7 +130,5 @@ class CategoryControllerTest {
                 CategoryDto[].class);
         Assertions.assertEquals(3, actual.length);
         Assertions.assertEquals(expected, Arrays.stream(actual).toList());
-
-
     }
 }
