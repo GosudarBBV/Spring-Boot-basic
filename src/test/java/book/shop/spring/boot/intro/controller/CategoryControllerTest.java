@@ -128,6 +128,7 @@ class CategoryControllerTest {
                 result.getResponse()
                         .getContentAsByteArray(),
                 CategoryDto[].class);
+
         Assertions.assertEquals(3, actual.length);
         Assertions.assertEquals(expected, Arrays.stream(actual).toList());
     }
