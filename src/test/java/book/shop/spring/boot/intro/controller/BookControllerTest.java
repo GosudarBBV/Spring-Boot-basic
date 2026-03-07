@@ -111,6 +111,7 @@ class BookControllerTest {
     @DisplayName("Get book by id")
     @WithMockUser(username = "user", roles = {"USER"})
     @Sql(scripts = {
+            "classpath:database/schemes/clear-all-tables.sql",
             "classpath:database/categories/add-categories-to-table.sql",
             "classpath:database/books/add-books-to-table.sql",
             "classpath:database/books/add-books-and-categories-into-table.sql"
