@@ -19,6 +19,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -51,7 +52,6 @@ class CategoryControllerTest {
                 .webAppContextSetup(applicationContext)
                 .apply(springSecurity())
                 .build();
-        teardown(dataSource);
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(true);
             ScriptUtils.executeSqlScript(
@@ -61,27 +61,11 @@ class CategoryControllerTest {
         }
     }
 
-    @AfterAll
-    static void afterAll(
-            @Autowired DataSource dataSource
-    ) {
-        teardown(dataSource);
-    }
-
-    @SneakyThrows
-    static void teardown(DataSource dataSource) {
-        try (Connection connection = dataSource.getConnection()) {
-            connection.setAutoCommit(true);
-            ScriptUtils.executeSqlScript(
-                    connection,
-                    new ClassPathResource("database/categories/delete-categories.sql")
-            );
-        }
-    }
-
     @Test
     @DisplayName("Create a new category")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @Sql(scripts = "classpath:database/categories/delete-categories.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void createProduct_ValidRequestDto_Success() throws Exception {
         CreateCategoryRequestDto requestDto
                 = new CreateCategoryRequestDto("Category1",
@@ -112,6 +96,10 @@ class CategoryControllerTest {
     @Test
     @DisplayName("Get all categories")
     @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @Sql(scripts = "classpath:database/categories/add-categories-to-table.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Sql(scripts = "classpath:database/categories/delete-categories.sql",
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void getAll_GivenCategories_ShouldReturnAllCategories() throws Exception {
         List<CategoryDto> expected = new ArrayList<>();
         expected.add(new CategoryDto().setId(1L).setName("Test a"));
