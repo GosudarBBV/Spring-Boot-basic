@@ -1,6 +1,5 @@
 package book.shop.spring.boot.intro.exception;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
