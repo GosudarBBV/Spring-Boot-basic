@@ -2,6 +2,8 @@ package book.shop.spring.boot.intro.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,10 +17,8 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.shaded.org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestSecurityConfig.class)
@@ -92,7 +92,9 @@ class CategoryControllerTest {
                 result.getResponse().getContentAsString(), CategoryDto.class
         );
 
-        EqualsBuilder.reflectionEquals(expected,actual,"id");
+        assertTrue(
+                EqualsBuilder.reflectionEquals(expected, actual, "id")
+        );
     }
 
     @Test
@@ -119,8 +121,10 @@ class CategoryControllerTest {
                         .getContentAsByteArray(),
                 CategoryDto[].class);
 
-        Assertions.assertEquals(2, actual.length);
-        Assertions.assertEquals(expected, Arrays.stream(actual).toList());
+        assertEquals(2, actual.length);
+        assertEquals(2, actual.length);
+        assertEquals("Test a", actual[0].getName());
+        assertEquals("Test b", actual[1].getName());
     }
 
     @Test
@@ -143,8 +147,8 @@ class CategoryControllerTest {
                 CategoryDto.class
         );
 
-        Assertions.assertEquals(1L, actual.getId());
-        Assertions.assertEquals("Test a", actual.getName());
+        assertEquals(1L, actual.getId());
+        assertEquals("Test a", actual.getName());
     }
 
     @Test
@@ -184,9 +188,9 @@ class CategoryControllerTest {
                 CategoryDto.class
         );
 
-        Assertions.assertEquals(1L, actual.getId());
-        Assertions.assertEquals("Updated Name", actual.getName());
-        Assertions.assertEquals("Updated Desc", actual.getDescription());
+        assertEquals(1L, actual.getId());
+        assertEquals("Updated Name", actual.getName());
+        assertEquals("Updated Desc", actual.getDescription());
     }
 
     @Test
@@ -256,7 +260,7 @@ class CategoryControllerTest {
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
-        Assertions.assertTrue(content.contains("id"));
+        assertTrue(content.contains("id"));
     }
 
     @Test
@@ -273,6 +277,6 @@ class CategoryControllerTest {
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
-        Assertions.assertTrue(content.contains("content") || content.contains("[]"));
+        assertTrue(content.contains("content") || content.contains("[]"));
     }
 }

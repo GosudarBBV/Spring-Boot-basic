@@ -5,7 +5,7 @@ import book.shop.spring.boot.intro.model.Category;
 import book.shop.spring.boot.intro.model.User;
 import java.math.BigDecimal;
 
-public class TestEntityFactory {
+public class TestUtil {
     public static User createTestUser() {
         return createTestUser("test@example.com");
     }

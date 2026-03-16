@@ -1,11 +1,13 @@
 package book.shop.spring.boot.intro.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import book.shop.spring.boot.intro.config.TestSecurityConfig;
 import book.shop.spring.boot.intro.dto.BookDto;
@@ -27,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestSecurityConfig.class)
@@ -41,6 +44,7 @@ class BookControllerTest {
     static void beforeAll(@Autowired WebApplicationContext applicationContext) {
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(applicationContext)
+                .apply(springSecurity())
                 .build();
     }
 
@@ -77,9 +81,14 @@ class BookControllerTest {
                 BookDto.class
         );
 
-        assert actual.getTitle().equals("New Book");
-        assert actual.getAuthor().equals("New Author");
-        assert actual.getPrice().equals(BigDecimal.valueOf(39.99));
+        BookDto expected = new BookDto();
+        expected.setTitle("New Book");
+        expected.setAuthor("New Author");
+        expected.setPrice(BigDecimal.valueOf(39.99));
+
+        assertTrue(
+                EqualsBuilder.reflectionEquals(expected, actual, "id")
+        );
     }
 
     @Test
@@ -103,8 +112,8 @@ class BookControllerTest {
 
         String json = result.getResponse().getContentAsString();
 
-        assert json.contains("Test Book 1");
-        assert json.contains("Test Book 2");
+        assertTrue(json.contains("Test Book 1"));
+        assertTrue(json.contains("Test Book 2"));
     }
 
     @Test
@@ -132,8 +141,13 @@ class BookControllerTest {
                 BookDto.class
         );
 
-        assert actual.getId().equals(1L);
-        assert actual.getTitle().equals("Test Book 1");
+        BookDto expected = new BookDto();
+        expected.setId(1L);
+        expected.setTitle("Test Book 1");
+
+        assertTrue(
+                EqualsBuilder.reflectionEquals(expected, actual, "author", "price", "description", "coverImage")
+        );
     }
 
     @Test
@@ -172,7 +186,13 @@ class BookControllerTest {
                 BookDto.class
         );
 
-        assert actual.getTitle().equals("Updated Book");
+        BookDto expected = new BookDto();
+        expected.setTitle("Updated Book");
+
+        assertTrue(
+                EqualsBuilder.reflectionEquals(expected, actual,
+                        "id", "author", "price", "description", "coverImage")
+        );
     }
 
     @Test

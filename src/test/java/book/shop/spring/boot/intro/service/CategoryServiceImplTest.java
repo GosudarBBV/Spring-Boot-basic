@@ -11,7 +11,7 @@ import book.shop.spring.boot.intro.exception.EntityNotFoundException;
 import book.shop.spring.boot.intro.mapper.CategoryMapper;
 import book.shop.spring.boot.intro.model.Category;
 import book.shop.spring.boot.intro.repository.CategoryRepository;
-import book.shop.spring.boot.intro.util.TestEntityFactory;
+import book.shop.spring.boot.intro.util.TestUtil;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -36,9 +36,9 @@ class CategoryServiceImplTest {
     @Test
     @DisplayName("Get all categories returns list of DTOs")
     void findAll_ReturnsListOfDtos() {
-        Category fictionCategory = TestEntityFactory.createCategory(1L,
+        Category fictionCategory = TestUtil.createCategory(1L,
                 "Fiction", "Books about imagination");
-        Category scienceCategory = TestEntityFactory.createCategory(2L,
+        Category scienceCategory = TestUtil.createCategory(2L,
                 "Science", "Scientific topics");
 
         when(categoryRepository.findAll()).thenReturn(List.of(fictionCategory, scienceCategory));
@@ -63,7 +63,7 @@ class CategoryServiceImplTest {
     @DisplayName("Get category by ID - returns DTO")
     void getById_ValidId_ReturnsDto() {
         Long categoryId = 1L;
-        Category category = TestEntityFactory.createCategory(categoryId,
+        Category category = TestUtil.createCategory(categoryId,
                 "Fiction",
                 "Books about imagination");
         CategoryResponseDto expectedDto = new CategoryResponseDto(categoryId,
@@ -102,7 +102,7 @@ class CategoryServiceImplTest {
         unsavedCategory.setName("Fantasy");
         unsavedCategory.setDescription("Magic books");
 
-        Category savedCategory = TestEntityFactory.createCategory(1L, "Fantasy",
+        Category savedCategory = TestUtil.createCategory(1L, "Fantasy",
                 "Magic books");
         CategoryResponseDto expectedDto = new CategoryResponseDto(1L, "Fantasy",
                 "Magic books");
@@ -126,10 +126,10 @@ class CategoryServiceImplTest {
         CreateCategoryRequestDto updateRequest = new CreateCategoryRequestDto("Fantasy",
                 "Updated description");
 
-        Category existingCategory = TestEntityFactory
+        Category existingCategory = TestUtil
                 .createCategory(categoryId, "Old name",
                 "Old description");
-        Category updatedCategory = TestEntityFactory
+        Category updatedCategory = TestUtil
                 .createCategory(categoryId, "Fantasy",
                 "Updated description");
         CategoryResponseDto expectedDto = new CategoryResponseDto(categoryId,
