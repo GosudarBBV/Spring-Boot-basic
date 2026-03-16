@@ -85,6 +85,8 @@ class BookControllerTest {
         expected.setTitle("New Book");
         expected.setAuthor("New Author");
         expected.setPrice(BigDecimal.valueOf(39.99));
+        expected.setDescription("Test description");
+        expected.setCoverImage("http://example.com/new.jpg");
 
         assertTrue(
                 EqualsBuilder.reflectionEquals(expected, actual, "id")
