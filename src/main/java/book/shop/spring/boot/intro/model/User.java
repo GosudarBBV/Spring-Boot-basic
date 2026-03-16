@@ -23,11 +23,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Table(name = "users")
-@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id=?")
+@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE id=?")
 @FilterDef(name = "deletedUserFilter", parameters = @ParamDef(name = "isDeleted",
         type = Boolean.class))
 @Filter(name = "deletedUserFilter",
-        condition = "deleted = :isDeleted")
+        condition = "is_deleted = :isDeleted")
 @Getter
 @Setter
 public class User implements UserDetails {

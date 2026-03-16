@@ -27,7 +27,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     public ShoppingCartResponseDto addBookToCart(Long bookId, int quantity, Long userId) {
         ShoppingCart cart = shoppingCartRepository.findByUserId(userId)
                 .orElseThrow(()
-                        -> new EntityNotFoundException("Shopping cart not found for user id: "
+                        -> new EntityNotFoundException("Shopping cart not found for userId: "
                         + userId));
 
         Book book = bookRepository.findById(bookId)
