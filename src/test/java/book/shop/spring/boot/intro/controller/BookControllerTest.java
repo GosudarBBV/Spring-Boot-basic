@@ -148,7 +148,8 @@ class BookControllerTest {
         expected.setTitle("Test Book 1");
 
         assertTrue(
-                EqualsBuilder.reflectionEquals(expected, actual, "author", "price", "description", "coverImage")
+                EqualsBuilder.reflectionEquals(expected, actual, "author",
+                        "price", "description", "coverImage")
         );
     }
 
