@@ -22,7 +22,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Entity
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE users SET deleted = true WHERE id=?")
-@Where(clause = "deleted = false")
+@Where(clause = "is_deleted = false")
 @Getter
 @Setter
 public class User implements UserDetails {
@@ -44,7 +44,7 @@ public class User implements UserDetails {
 
     private String shippingAddress;
 
-    @Column(nullable = false)
+    @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
     @ManyToMany

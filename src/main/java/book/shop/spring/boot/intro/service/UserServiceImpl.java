@@ -32,6 +32,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto requestDto) {
+
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new RegistrationException("User already exists with email: "
                     + requestDto.getEmail());
@@ -39,14 +40,15 @@ public class UserServiceImpl implements UserService {
 
         User user = userMapper.toModel(requestDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         Role userRole = roleRepository.findByName(RoleName.USER)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Role with name " + RoleName.USER + " not found"));
 
         user.setRoles(Set.of(userRole));
-        createShoppingCart(user);
-
-        return userMapper.toResponseDto(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        createShoppingCart(savedUser);
+        return userMapper.toResponseDto(savedUser);
     }
 
     @Override
