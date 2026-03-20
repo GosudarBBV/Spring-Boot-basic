@@ -103,3 +103,53 @@ POST /api/auth/registration
 ## 🎥 Demo Video
 
 👉 [Watch Demo Video on YouTube](https://youtu.be/_sADYjuyfeM)
+
+![ER Diagram](src/main/resources/images/er-diagram.png)
+
+## 🔐 Role-based Access to Endpoints
+
+The application implements role-based access control using Spring Security and JWT authentication.  
+Endpoints are доступні залежно від ролі користувача: **USER** або **ADMIN**.
+
+---
+
+### 👤 User Endpoints
+
+| Method | Endpoint | Description |
+|-------|--------|------------|
+| POST | `/api/auth/registration` | Register a new user |
+| POST | `/api/auth/login` | Authenticate user and receive JWT token |
+| GET | `/api/books` | Get all books with pagination |
+| GET | `/api/books/{id}` | Get book details by ID |
+| GET | `/api/categories` | Get all categories |
+| GET | `/api/categories/{id}` | Get category by ID |
+| GET | `/api/categories/by-category/{id}` | Get books by category |
+| GET | `/api/cart` | Get current user's shopping cart |
+| POST | `/api/cart` | Add book to shopping cart |
+| PUT | `/api/cart/items/{cartItemId}` | Update cart item quantity |
+| DELETE | `/api/cart/items/{cartItemId}` | Remove item from cart |
+| GET | `/api/orders` | Get user's order history |
+| POST | `/api/orders` | Place a new order |
+| GET | `/api/orders/{orderId}/items` | Get all items from order |
+| GET | `/api/orders/{orderId}/items/{itemId}` | Get specific item from order |
+
+---
+
+### 🛠️ Admin Endpoints
+
+| Method | Endpoint | Description |
+|-------|--------|------------|
+| POST | `/api/books` | Create a new book |
+| PUT | `/api/books/{id}` | Update book |
+| DELETE | `/api/books/{id}` | Delete book |
+| POST | `/api/categories` | Create a new category |
+| PUT | `/api/categories/{id}` | Update category |
+| DELETE | `/api/categories/{id}` | Delete category |
+| DELETE | `/api/users/{id}` | Delete user |
+| PATCH | `/api/orders/{id}` | Update order status |
+
+---
+
+All endpoints (except authentication) require a valid JWT token in the Authorization header:
+
+Authorization: Bearer <your_token>
